@@ -62,8 +62,8 @@ CYdLidar::CYdLidar() : lidarPtr(nullptr)
   m_MaxRange = 64.0;
   m_MinRange = 0.01f;
   m_SampleRate = 5;
-  //   m_SampleRatebyD1      = 5;
-  // defalutSampleRate     = 5;
+  // m_SampleRatebyD1 = 5;
+  // defalutSampleRate = 5;
   m_ScanFrequency = 10;
   scanning = false;
   m_FixedSize = 720;
@@ -441,7 +441,7 @@ bool CYdLidar::initialize()
 }
 
 /*-------------------------------------------------------------
-                        initialize
+                        GetLidarVersion
 -------------------------------------------------------------*/
 void CYdLidar::GetLidarVersion(LidarVersion &lv)
 {
@@ -466,7 +466,7 @@ void CYdLidar::GetLidarVersion(LidarVersion &lv)
 -------------------------------------------------------------*/
 bool CYdLidar::turnOn()
 {
-  //重置错误
+  // reset error
   lidarPtr->setDriverError(NoError);
 
   if (scanning && lidarPtr->isscanning())
@@ -475,7 +475,7 @@ bool CYdLidar::turnOn()
   }
 
   uint32_t t = getms();
-  //启动扫描
+  // Start scan
   result_t op_result = lidarPtr->startScan();
   if (!IS_OK(op_result))
   {
@@ -492,7 +492,7 @@ bool CYdLidar::turnOn()
   fflush(stdout);
 
   t = getms();
-  //计算采样率
+  // Calculate sample rate
   if (!checkLidarAbnormal())
   {
     lidarPtr->stop();
@@ -505,7 +505,7 @@ bool CYdLidar::turnOn()
   printf("[YDLIDAR] Successed to check the lidar, Elapsed time %u ms\n", getms() - t);
   fflush(stdout);
 
-  //禁用此处获取设备信息方式
+  // Disable this method of obtaining device information
   // if (m_SingleChannel && !isNetTOFLidar(m_LidarType))
   // {
   //   handleSingleChannelDevice();
@@ -552,7 +552,7 @@ bool CYdLidar::isScanning() const
 
 bool CYdLidar::doProcessSimple(LaserScan &outscan)
 {
-  //判断是否已启动扫描
+  // Determine if a scan has been started.
   if (!checkHardware())
   {
     delay(200 / m_ScanFrequency);
@@ -566,11 +566,11 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
   // wait Scan data:
   uint64_t tim_scan_start = getTime();
   uint64_t startTs = tim_scan_start;
-  //从缓存中获取已采集的一圈扫描数据
+  // Retrieve the collected scan data from the cache.
   result_t op_result = lidarPtr->grabScanData(global_nodes, count, 1000);
   uint64_t tim_scan_end = getTime();
   uint64_t endTs = tim_scan_end;
-  uint64_t sys_scan_time = tim_scan_end - tim_scan_start; //获取一圈数据所花费的时间
+  uint64_t sys_scan_time = tim_scan_end - tim_scan_start; // Time spent acquiring data for one lap
   outscan.points.clear();
 
   // Fill in scan data:
@@ -588,7 +588,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       }
     }
 
-    //根据采样频率计算的采样间隔时间计算出来总的扫描时间
+    // The total scan time is calculated based on the sampling interval time calculated from the sampling frequency.
     uint64_t scan_time = m_PointTime * (count - 1 + offsetSize);
     int timeDiff = static_cast<int>(sys_scan_time - scan_time);
 
@@ -643,7 +643,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     memset(&debug, 0, sizeof(debug));
     outscan.config.min_angle = math::from_degrees(m_MinAngle);
     outscan.config.max_angle = math::from_degrees(m_MaxAngle);
-    //将首末点采集时间差作为采集时长
+    // The time difference between the first and last data collection points is used as the data collection duration.
     // outscan.config.scan_time = static_cast<float>((global_nodes[count - 1].stamp - 
     //   global_nodes[0].stamp)) / 1e9;
     // outscan.config.scan_time = sys_scan_time / 1e9;
@@ -652,18 +652,18 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     else
       outscan.config.scan_time = 0;
     lastStamp = global_nodes[0].stamp;
-    //计算时间增量
+    // Calculate time delta
     if (!ISZERO(outscan.config.scan_time))
       outscan.config.time_increment = outscan.config.scan_time / (count - 1);
     else
       outscan.config.time_increment = .0f;
     outscan.config.min_range = m_MinRange;
     outscan.config.max_range = m_MaxRange;
-    //模组编号
+    // Module number
     outscan.moduleNum = global_nodes[0].index;
-    //环境标记
+    // Environment flag
     outscan.envFlag = global_nodes[0].is + (uint16_t(global_nodes[1].is) << 8);
-    //将一圈中第一个点采集时间作为该圈数据采集时间
+    // Use the collection time of the first point in a scan as the collection time for that scan
     if (global_nodes[0].stamp > 0)
       outscan.stamp = global_nodes[0].stamp;
     else
@@ -686,7 +686,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
 
     // printf("AngleOffset %f\n", m_AngleOffset);
 
-    //遍历一圈点
+    // Traverse a circle of points
     for (int i = 0; i < count; i++)
     {
       const node_info& node = global_nodes[i];
@@ -740,7 +740,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       {
         scanfrequency = global_nodes[i].scanFreq / 10.0;
 
-        if (isTOFLidar(m_LidarType)) //TOF雷达转速偏移3HZ
+        if (isTOFLidar(m_LidarType)) // TOF radar rotation speed deviation 3Hz
         {
           if (!isOldVersionTOFLidar(lidar_model, Major, Minjor))
           {
@@ -748,7 +748,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
           }
         }
         else if (isTEALidar(lidar_model) ||
-          isGSLidar(m_LidarType)) //TEA雷达转速范围10~30，无缩放
+          isGSLidar(m_LidarType)) // TEA radar rotation speed range 10~30, no scaling
         {
           scanfrequency = global_nodes[i].scanFreq; 
         }
@@ -774,7 +774,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
         range = 0.0;
       }
 
-      //过滤点
+      // filter point
       if (!isRangeValid(range) ||
         (m_SunNoise && node.is == SUNNOISEINTENSITY) ||
         (m_GlassNoise && node.is == GLASSNOISEINTENSITY))
@@ -801,18 +801,18 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       {
         debug.maxIndex = 255;
       }
-    } //end for (int i = 0; i < count; i++)
+    } // end for (int i = 0; i < count; i++)
 
-    outscan.size = outscan.points.size(); //保留原点云数
+    outscan.size = outscan.points.size(); // Preserve the original cloud data
 
     if (m_FixedResolution)
     {
       outscan.points.resize(all_node_count);
     }
 
-    //解析V2协议雷达扫描数据中ct信息中的设备信息
+    // Analysis of device information in CT information of V2 protocol radar scan data
     // getDeviceInfoByPackage(debug);
-    //重新计算采样率
+    // Recalculate the sampling rate
     resample(scanfrequency, count, tim_scan_end, tim_scan_start);
 
     outscan.scanFreq = scanfrequency;
@@ -1046,7 +1046,7 @@ bool CYdLidar::getDeviceInfoByPackage(const LaserDebug &debug)
       }
 
       m_SerialNumber = serial_number;
-      //设置模组标记
+      // Set module tag
       lidarPtr->setHasDeviceInfo(lidarPtr->getHasDeviceInfo() | EPT_Module);
 
       return true;
@@ -1064,7 +1064,7 @@ void CYdLidar::resample(
   uint64_t tim_scan_end,
   uint64_t tim_scan_start)
 {
-  //重新校准采样率
+  // Recalibrate sampling rate
   // if( (lidar_model  == DriverInterface::YDLIDAR_TG15)
   //     || (lidar_model  == DriverInterface::YDLIDAR_TG30)
   //     || (lidar_model  == DriverInterface::YDLIDAR_TG50) )
@@ -1100,11 +1100,11 @@ void CYdLidar::resample(
   }
 }
 
-//检查异常
+// Check exception
 bool CYdLidar::checkLidarAbnormal()
 {
   size_t count = ydlidar::YDlidarDriver::MAX_SCAN_NODES;
-  int checkCount = 0; //检查次数
+  int checkCount = 0; // Check times
 
   if (m_AbnormalCheckCount < 2)
     m_AbnormalCheckCount = 2;
@@ -1117,7 +1117,7 @@ bool CYdLidar::checkLidarAbnormal()
     // printf("checkLidarAbnormal %d\n", checkCount);
 
     // Ensure that the voltage is insufficient or the motor resistance is high, 
-    //causing an abnormality.
+    // causing an abnormality.
     if (checkCount)
       delay(500);
 
@@ -1127,9 +1127,9 @@ bool CYdLidar::checkLidarAbnormal()
     int checkOneCount = 0;
     ret = RESULT_OK;
 
-    //单双通雷达，计算采样率
+    // Single/dual-channel radar, calculating sampling rate
     while (checkOneCount < 5 &&
-          //  (scan_time < 0.05 || !lidarPtr->getSingleChannel()) &&
+          // (scan_time < 0.05 || !lidarPtr->getSingleChannel()) &&
            IS_OK(ret))
     {
       checkOneCount ++;
@@ -1141,7 +1141,7 @@ bool CYdLidar::checkLidarAbnormal()
       
       if (IS_OK(ret))
       {
-        // 获取CT信息
+        // Get CT information
         if (!(lidarPtr->getHasDeviceInfo() & EPT_Module))
         {
           // printf("Get module device info\n");
@@ -1152,7 +1152,7 @@ bool CYdLidar::checkLidarAbnormal()
             if (global_nodes[i].error)
               debug.maxIndex = 255;
           }
-          // 解析V2协议雷达扫描数据中ct信息中的设备信息
+          // Analysis of device information in CT information of V2 protocol radar scan data
           getDeviceInfoByPackage(debug);
         }
 
@@ -1167,7 +1167,7 @@ bool CYdLidar::checkLidarAbnormal()
 
         if (calcSampleRate(count, scan_time))
         {
-          // 双通雷达计算完采样率即可返回
+          // The dual-channel radar can return after calculating the sampling rate.
           if (!lidarPtr->getSingleChannel())
           {
             return IS_OK(ret);
@@ -1175,7 +1175,7 @@ bool CYdLidar::checkLidarAbnormal()
         }
         else
         {
-          //计算采样率
+          // Calculate sample rate
           if (scan_time > 0.05 && scan_time < 0.5)
           {
             m_SampleRate = static_cast<int>((count / scan_time + 500) / 1000);
@@ -1186,7 +1186,7 @@ bool CYdLidar::checkLidarAbnormal()
       }
     }
 
-    //单通雷达计算固定分辨率时的一圈点数
+    // The number of points per ring when calculating a fixed resolution using a single-channel radar.
     if (lidarPtr->getSingleChannel() &&
       data.size() > 1)
     {
@@ -1244,16 +1244,16 @@ bool CYdLidar::calcSampleRate(int count, double scan_time)
   if (count < 1)
     return false;
 
-  // 1、如果雷达支持直接获取转速，则使用获取的转速计算采样率，此时将默认采样率值置为该值
-  // 2、如果有设置默认采样率，判断当前雷达型号对应的默认采样率值的个数，个数为1，
-  //直接使用该采样率，个数不为1则根据实时采样率进行匹配
-  // 3、如果没有设置默认采样率，则使用实时采样率
+  // 1. If the radar supports direct acquisition of rotational speed, the acquired rotational speed is used to calculate the sampling rate, and the default sampling rate value is set to this value.
+  // 2. If a default sampling rate is set, determine the number of default sampling rate values ​​corresponding to the current radar model. If the number is 1,
+  // Use the sampling rate directly; if the number is not 1, match according to the real-time sampling rate.
+  // 3. If no default sampling rate is set, the real-time sampling rate will be used.
   float sr = 0;
   bool ret = false;
 
   if (global_nodes[0].scanFreq != 0)
   {
-    //如果解析到转速信息，根据转速计算采样率
+    // If the rotational speed information is parsed, calculate the sampling rate based on the rotational speed.
     double scanfrequency = global_nodes[0].scanFreq / 10.0;
     if (isTOFLidar(m_LidarType) &&
         !isOldVersionTOFLidar(lidar_model, Major, Minjor))
@@ -1264,13 +1264,13 @@ bool CYdLidar::calcSampleRate(int count, double scan_time)
 
     if (isSDMLidar(m_LidarType))
     {
-      defalutSampleRate.clear(); //SDM雷达通过协议获取转速计算采样率
+      defalutSampleRate.clear(); // SDM radar obtains rotational speed and calculates sampling rate via protocol.
       sr = float(count * global_nodes[0].scanFreq) / 1000;
     }
   }
   else
   {
-    //如果没有解析到转速信息，根据时间计算采样率
+    // If the rotational speed information is not parsed, the sampling rate is calculated based on the time.
     if (scan_time > 0.04 && scan_time < 0.4)
     {
       sr = static_cast<int>((count / scan_time + 500) / 1000);
@@ -1293,9 +1293,9 @@ bool CYdLidar::calcSampleRate(int count, double scan_time)
       float d = .0;
       for (size_t i=0; i<size; ++i)
       {
-        if (i + 1 < size) //如果是最后
+        if (i + 1 < size) //if it is the last
         {
-          //按权值2:8分
+          //Divided by weight 2:8
           d = defalutSampleRate.at(i + 1) - defalutSampleRate.at(i);
           if (float(sr) <= float(defalutSampleRate.at(i) + 0.2 * d))
           {
@@ -1316,7 +1316,7 @@ bool CYdLidar::calcSampleRate(int count, double scan_time)
   {
     // printf("[YDLIDAR] Calc Sample Rate3: %dK\n", sr);
     if (sr > 0)
-      SampleRateMap[sr * 1000] ++; //放大1000倍存入
+      SampleRateMap[sr * 1000] ++; //Stored at 1000x magnification
     if (isValidSampleRate(SampleRateMap))
       ret = true;
   }
@@ -1327,11 +1327,11 @@ bool CYdLidar::calcSampleRate(int count, double scan_time)
     m_PointTime = 1e9 / (m_SampleRate * 1000);
     lidarPtr->setPointTime(m_PointTime);
     if (!m_SingleChannel)
-      // m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1); //不知转速为何要减少0.1
+      // m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1); //I don't understand why the rotational speed needs to be reduced by 0.1.
       m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency);
     
     printf("[YDLIDAR] Scan Frequency: %.02fHz\n", m_ScanFrequency);
-    if (!isSDMLidar(m_LidarType)) //非SDM雷达才打印Fixed Size
+    if (!isSDMLidar(m_LidarType)) //Only non-SDM radars print Fixed Size.
       printf("[YDLIDAR] Fixed Size: %d\n", m_FixedSize);
     printf("[YDLIDAR] Sample Rate: %.02fK\n", m_SampleRate);
   }
@@ -1485,7 +1485,7 @@ bool CYdLidar::getDeviceInfo()
   }
 
   // printf("LIDAR get device info finished, Elapsed time %u ms\n", getms() - t);
-  //检查转速
+  //Check speed
   if (hasScanFrequencyCtrl(di.model) || 
     ((isTOFLidar(m_LidarType)) && !m_SingleChannel) || 
       isNetTOFLidar(m_LidarType))
@@ -1520,9 +1520,9 @@ void CYdLidar::handleSingleChannelDevice()
     return;
   }
 
-  //获取模组设备信息
-  //1、单通雷达需要从CT信息中获取模组设备信息
-  //2、双通雷达需要获取启动时抛出的模组设备信息
+  //Obtain module device information
+  //1. Single-channel radar needs to obtain module device information from CT information.
+  //2. The dual-channel radar needs to acquire the module device information emitted during startup.
 
   device_info di;
   memset(&di, 0, sizeof(device_info));
@@ -1565,11 +1565,11 @@ void CYdLidar::checkSampleRate()
     printf("[YDLIDAR] Get origin sample rate code: %u\n", _rate.rate);
     if (!isTOFLidarByModel(lidar_model))
     {
-      //非TG系列雷达获取采样率码转成采样率值
+      // Non-TG series radar acquires sampling rate code and converts it into sampling rate value.
       sr = ConvertUserToLidarSmaple(lidar_model, m_SampleRate, _rate.rate);
       // printf("[YDLIDAR] Get sample rate code: %dK\n", sr);
 
-      //非TG系列雷达通过设备信息获取
+      // non-TG series radar obtains sampling rate via device information
       while (sr != _rate.rate)
       {
         ans = lidarPtr->setSamplingRate(_rate);
@@ -1586,7 +1586,7 @@ void CYdLidar::checkSampleRate()
     }
     else
     {
-      //TG系列雷达直接获取采样率值
+      // TG series radars directly acquire sampling rate values
       sr = ConvertLidarToUserSmaple(lidar_model, _rate.rate);
     }
 
@@ -1606,25 +1606,25 @@ bool CYdLidar::checkScanFrequency()
 
   if (isSupportScanFrequency(lidar_model, m_ScanFrequency))
   {
-    //TODO: 此处为何要加上偏移量，待解释
+    // TODO: The reason for adding an offset here needs further explanation.
     // m_ScanFrequency += frequencyOffset;
     ans = lidarPtr->getScanFrequency(_scan_frequency);
     if (IS_OK(ans))
     {
       frequency = _scan_frequency.frequency / 100.f;
-      if (isTOFLidar(m_LidarType)) //TG雷达转速虚高0.4需要减去还原真实转速
+      if (isTOFLidar(m_LidarType)) //The TG radar speed is artificially inflated by 0.4, which needs to be subtracted to restore the true speed.
         frequency -= 0.4;
       hz = m_ScanFrequency - frequency;
       printf("[YDLIDAR] Current scan frequency: %.02fHz\n", frequency);
       if (hz > 0)
       {
-        //大调速
+        // Large speed regulation
         while (hz > 0.95)
         {
           lidarPtr->setScanFrequencyAdd(_scan_frequency);
           hz -= 1.0;
         }
-        //小调速
+        // Small speed regulation
         while (hz > 0.09)
         {
           lidarPtr->setScanFrequencyAddMic(_scan_frequency);
@@ -1662,7 +1662,7 @@ bool CYdLidar::checkScanFrequency()
   if (IS_OK(ans))
   {
     frequency = _scan_frequency.frequency / 100.0f;
-    if (isTOFLidar(m_LidarType)) //TG雷达转速虚高0.4需要减去还原真实转速
+    if (isTOFLidar(m_LidarType)) //The TG radar speed is artificially inflated by 0.4, which needs to be subtracted to restore the true speed
         frequency -= 0.4;
     m_ScanFrequency = frequency;
   }
@@ -1761,29 +1761,35 @@ bool CYdLidar::checkCalibrationAngle(const std::string &serialNumber)
 -------------------------------------------------------------*/
 bool CYdLidar::checkCOMMs()
 {
-  //如果雷达类型有变化则需要先删除旧对象
+  // If the radar type changes, the old object needs to be deleted first.
   if (lidarPtr && 
     lidarPtr->getLidarType() != m_LidarType)
   {
     delete lidarPtr;
     lidarPtr = nullptr;
   }
-  //如果未创建对象
+  // If the object is not created
   if (!lidarPtr)
   {
     printf("[YDLIDAR] SDK initializing\n");
 
-    //根据雷达类型创建对应的实例
-    if (isNetTOFLidar(m_LidarType))
+    // Create a corresponding instance based on the radar type.
+    if (isNetTOFLidar(m_LidarType)){
+      fprintf(stderr, "[YDLIDAR] Create driver for T15!\n");
       lidarPtr = new ydlidar::ETLidarDriver(); //T15
-    else if (isGSLidar(m_LidarType)) //GS
-      lidarPtr = new ydlidar::GSLidarDriver(m_DeviceType);
-    else if (isSDMLidar(m_LidarType)) //SDM
-      lidarPtr = new ydlidar::SDMLidarDriver();
-    else if (isDTSLidar(m_LidarType)) //SDM
-      lidarPtr = new ydlidar::DTSLidarDriver();
-    else //通用雷达
-      lidarPtr = new ydlidar::YDlidarDriver(m_DeviceType);
+    }else if (isGSLidar(m_LidarType)){
+      fprintf(stderr, "[YDLIDAR] Create driver for GS!\n");
+      lidarPtr = new ydlidar::GSLidarDriver(m_DeviceType); //GS
+    }else if (isSDMLidar(m_LidarType)){
+      fprintf(stderr, "[YDLIDAR] Create driver for SDM!\n");
+      lidarPtr = new ydlidar::SDMLidarDriver(); //SDM
+    }else if (isDTSLidar(m_LidarType)){
+      fprintf(stderr, "[YDLIDAR] Create driver for DTS!\n");
+      lidarPtr = new ydlidar::DTSLidarDriver(); //DTS
+    }else{
+      fprintf(stderr, "[YDLIDAR] Create driver for universal lidar!\n");
+      lidarPtr = new ydlidar::YDlidarDriver(m_DeviceType); //universal radars
+    }
 
     if (!lidarPtr)
     {
@@ -1801,7 +1807,7 @@ bool CYdLidar::checkCOMMs()
     return true;
   }
 
-  //初始化
+  // initialization
   lidarPtr->setSingleChannel(m_SingleChannel);
   lidarPtr->setLidarType(m_LidarType);
   lidarPtr->setScanFreq(m_ScanFrequency);
@@ -1830,7 +1836,7 @@ bool CYdLidar::checkCOMMs()
       }
     }
   }
-  //连接
+  // connect
   result_t op_result = lidarPtr->connect(m_SerialPort.c_str(), m_SerialBaudrate);
   if (!IS_OK(op_result))
   {

@@ -3,7 +3,7 @@
 #include "FilterInterface.h"
 
 
-//强光滤波器（拖尾滤波器）
+// High-intensity light filter (trailing filter)
 class YDLIDAR_API StrongLightFilter : public FilterInterface
 {
 public:
@@ -26,21 +26,21 @@ protected:
 
         Point(float x = .0, float y = .0);
 
-        static Point angular2Polar(const Point &p); // 直角坐标转极坐标
-        static Point polar2Angular(const Point &p); // 极坐标转直角坐标
-        // 计算直角坐标系中点到直线的距离
+        static Point angular2Polar(const Point &p); // Rectangular coordinates to polar coordinates
+        static Point polar2Angular(const Point &p); // Polar coordinates to rectangular coordinates
+        // Calculate the distance from a point in a rectangular coordinate system to a line.
         static float calcDist(
             const Point &p,
             const Point &p1,
             const Point &p2);
-        //计算向量的长度
+        // Calculate the length of the vector
         static float calcLen(
             const Point &v);
-        //计算向量的乘积
+        // Calculate the product of vectors
         static float calcDot(
             const Point &v1,
             const Point &v2);
-        //计算直角坐标系中两线段组成直线的夹角
+        // Calculate the angle between two line segments forming a straight line in a rectangular coordinate system.
         static float calcAngle(
             const Point &p1,
             const Point &p2,
@@ -48,9 +48,9 @@ protected:
             const Point &p4);
     };
 
-    float maxDist = 0.05; //最大距离阈值，单位米（此值可根据需要自己修改）
-    float maxAngle = 12.0; //最大角度阈值，单位°（此值可根据需要自己修改）
-    int minNoise = 2; //最小连续噪点数（此值可根据需要自己修改）
+    float maxDist = 0.05; // Maximum distance threshold, in meters (this value can be modified as needed).
+    float maxAngle = 12.0; // Maximum angle threshold, in degrees (this value can be modified as needed).
+    int minNoise = 2; //Minimum number of consecutive noise points (this value can be modified as needed)
 };
 
 #endif // STRONGLIGHTFILTER_H

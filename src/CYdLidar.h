@@ -109,7 +109,7 @@ class YDLIDAR_API CYdLidar {
    */
   bool turnOn();
 
-  //判断是否已启动扫描
+  // Determine if a scan has been started.
   bool isScanning() const;
   /**
    * @brief Get the LiDAR Scan Data. turnOn is successful before doProcessSimple scan data.
@@ -142,56 +142,56 @@ class YDLIDAR_API CYdLidar {
   DriverError getDriverError() const;
 
   /**
-   * @brief 设置雷达工作模式（目前只针对GS2雷达）
-   * @param[in] mode 雷达工作模式
-   * @param[in] addr 雷达地址
-   * @return 成功返回true，否则返回false
+   * @brief Configure radar operating mode (currently only for GS2 radar).
+   * @param[in] mode Radar operating modes
+   * @param[in] addr Radar address
+   * @return true if successful, otherwise false
    */
   bool setWorkMode(int mode, uint8_t addr=0x00);
   
   /**
-   * @brief 是否开启阳光噪点过滤功能
-   * @param[in] e true开启，false关闭
-   * @return 无
+   * @brief Whether to enable sunlight noise filtering
+   * @param[in] e true to enable, false to disable
+   * @return void
    */
   void enableSunNoise(bool e=true);
 
   /**
-   * @brief 是否开启玻璃噪点过滤功能
-   * @param[in] e true开启，false关闭
-   * @return 无
+   * @brief Enable glass noise filtering function?
+   * @param[in] e true to enable, false to disable
+   * @return void
    */
   void enableGlassNoise(bool e=true);
 
   /**
-   * @brief 获取用户版本（目前只针对三角雷达）
-   * @param[out] version 用户版本
-   * @return 成功返回true，否则返回false
+   * @brief Get user version (currently only for triangular radar)
+   * @param[out] version User version
+   * @return true if successful, otherwise false
    */
   bool getUserVersion(std::string &version);
 
-  //设置是否优先获取底板设备信息
+  // Configure whether to prioritize obtaining base plate equipment information.
   void setBottomPriority(bool yes=true);
-  //获取设备信息
+  // Get device information
   bool getDeviceInfo(device_info& di, int type);
-  //获取级联设备信息
+  // Get cascaded device information
   bool getDeviceInfo(std::vector<device_info_ex>& dis);
-  //设置是否自动识别强度（启用时会占用一定时间）
+  // Configure whether to automatically detect intensity (enabling this will take some time).
   void setAutoIntensity(bool yes=false);
 
-  //启用调试
+  // Enable debugging
   void setEnableDebug(bool yes) {m_Debug = yes;}
 
-  //OTA功能相关
-  //设置OTA文件路径
+  // OTA function related
+  // Set OTA file path
   void setOtaFile(const std::string& name) {
     otaName = name;
   }
-  //设置OTA文件加密
+  // Configure OTA file encryption
   void setOtaEncode(bool e) {
     otaEncode = e;
   }
-  //开始OTA升级
+  // Start OTA upgrade
   bool ota();
 
  private:
@@ -332,7 +332,7 @@ class YDLIDAR_API CYdLidar {
   std::map<int, int> SampleRateMap; ///< Sample Rate Map
   std::string m_SerialNumber;       ///< LiDAR serial number
   // int defalutSampleRate;            ///< LiDAR Default Sampling Rate
-  std::vector<int> defalutSampleRate; //默认采样率可能是多个值
+  std::vector<int> defalutSampleRate; //The default sampling rate may have multiple values.
   float m_field_of_view;            ///< LiDAR Field of View Angle.
   LidarVersion m_LidarVersion;      ///< LiDAR Version information
   float zero_offset_angle_scale;   ///< LiDAR Zero Offset Angle
@@ -349,14 +349,14 @@ class YDLIDAR_API CYdLidar {
   bool m_SingleChannel;             ///< LiDAR single channel
   bool m_Intensity;                 ///< LiDAR Intensity
   int m_IntensityBit;               ///< LiDAR Intensity bit
-  bool m_AutoIntensity; //自动识别强度
+  bool m_AutoIntensity;             //Automatic intensity recognition
   bool m_SupportMotorDtrCtrl;       ///< LiDAR Motor DTR
   bool m_SupportHearBeat;           ///< LiDAR HeartBeat
 
   int m_SerialBaudrate;             ///< LiDAR serial baudrate or network port
   int m_LidarType;                  ///< LiDAR type
   int m_DeviceType;                 ///< LiDAR device type
-  float m_SampleRate;                 ///< LiDAR sample rate
+float m_SampleRate;                 ///< LiDAR sample rate
   int m_SampleRatebyD1;             ///< LiDAR sample rate by d1
   int m_AbnormalCheckCount;         ///< LiDAR abnormal count
 
@@ -365,18 +365,18 @@ class YDLIDAR_API CYdLidar {
   float m_MaxRange;                 ///< LiDAR maximum range
   float m_MinRange;                 ///< LiDAR minimum range
   float m_ScanFrequency;            ///< LiDAR scanning frequency
-  bool m_Bottom = true; //是否底板优先
-  bool m_Debug = false; //是否启用调试
+  bool m_Bottom = true; // Should the base plate be prioritized?
+  bool m_Debug = false; // Whether to enable debugging
 
-  bool m_SunNoise = false; //阳光噪点过滤标识
-  bool m_GlassNoise = false; //玻璃噪点过滤标识
-  std::string otaName; //OTA文件路径
-  bool otaEncode = true; //OTA是否加密
-  uint64_t lastStamp = 0; //时间戳
+  bool m_SunNoise = false; // Sunlight noise filtering flag
+  bool m_GlassNoise = false; // Glass noise filtering flag
+  std::string otaName; // OTA file path
+  bool otaEncode = true; // Is OTA encrypted?
+  uint64_t lastStamp = 0; // Timestamp of the last scan start point
 };	// End of class
 #endif // CYDLIDAR_H
 
-//os
+// os
 namespace ydlidar {
 /**
  * @brief system signal initialize

@@ -11,7 +11,7 @@ namespace ydlidar
 DTSLidarDriver::DTSLidarDriver()
     : _serial(NULL)
 {
-    //串口配置参数
+    // Serial port configuration parameters
     isAutoReconnect = true;
     isAutoconnting = false;
     m_baudrate = 921600;
@@ -79,7 +79,7 @@ result_t DTSLidarDriver::connect(const char *port, uint32_t baudrate)
     }
 
     stopScan();
-    //clearDTR();
+    // clearDTR();
 
     return RESULT_OK;
 }
@@ -142,10 +142,10 @@ result_t DTSLidarDriver::stop()
 }
 
 /*
- * @brief 获取激光数据
- * @param nodebuffer out: 激光点信息
- * @param count      in: 一圈激光点数
- * @param timeout    in: 超时时间
+ * @brief Acquiring laser data
+ * @param nodebuffer out: Laser dot information
+ * @param count      in: Number of laser dots in a circle
+ * @param timeout    in: Timeout
  * @return
  */
 result_t DTSLidarDriver::grabScanData(
@@ -167,7 +167,7 @@ result_t DTSLidarDriver::grabScanData(
         memcpy(nodebuffer, scan_node_buf, count * SDKNODESIZE);
         scan_node_count = 0;
         ret = RESULT_OK;
-        _dataEvent.set(false); //重置状态
+        _dataEvent.set(false); // Reset status
         break;
     }
     default:
@@ -180,11 +180,11 @@ result_t DTSLidarDriver::grabScanData(
 }
 
 /*
- * @brief 等待扫描数据
- * @param nodes   out:存储节点信息的数组
- * @param count   out:节点信息数组的大小，传入时表示期望接收的节点数量，返回时表示实际接收的节点数量
- * @param timeout in:超时时间（毫秒）
- * @return result_t 操作结果，成功返回RESULT_OK，失败返回RESULT_FAIL
+ * @brief Waiting for scan data
+ * @param nodes   out: Array to store node information
+ * @param count   out: Size of the node information array, input indicates the expected number of nodes to receive, output indicates the actual number of nodes received
+ * @param timeout in: Timeout duration (milliseconds)
+ * @return result_t Operation result, success returns RESULT_OK, failure returns RESULT_FAIL
  */
 result_t DTSLidarDriver::waitScanData(
     node_info *nodes,
@@ -192,7 +192,7 @@ result_t DTSLidarDriver::waitScanData(
     uint32_t timeout)
 {
     result_t ret = RESULT_FAIL;
-    // 检查是否已连接
+    // Check if connected
     if (!m_isConnected)
     {
         count = 0;
@@ -203,20 +203,20 @@ result_t DTSLidarDriver::waitScanData(
     uint32_t st = getms();
     uint32_t wt = 0;
 
-    //循环等待接收节点数据
+    // Looping and waiting to receive data from the node
     while ((wt = getms() - st) < timeout && 
         recvCount < count)
     {
         node_info node;
         memset(&node, 0, SDKNODESIZE);
-        //解包激光数据
+        // Unpacking laser data
         ret = waitPackage(&node, timeout - wt);
         if (!IS_OK(ret))
         {
             count = recvCount;
             return ret;
         }
-        //单点
+        // single point
         nodes[recvCount++] = node;
         if (recvCount == count)
             return RESULT_OK;
@@ -226,7 +226,7 @@ result_t DTSLidarDriver::waitScanData(
     return RESULT_FAIL;
 }
 
-//激光数据解析线程
+// Laser data parsing thread
 int DTSLidarDriver::cacheScanData()
 {
     node_info local_buf[SDK_DTS_POINT_COUNT];
@@ -239,7 +239,7 @@ int DTSLidarDriver::cacheScanData()
     {
         count = SDK_DTS_POINT_COUNT;
         ret = waitScanData(local_buf, count);
-        //如果解析点云失败
+        //If point cloud parsing fails
         if (!IS_OK(ret))
         {
             if (timeout_count > DEFAULT_TIMEOUT_COUNT)
@@ -288,8 +288,8 @@ int DTSLidarDriver::cacheScanData()
 }
 
 /*
- *@brief 创建解析雷达数据线程
- *@note 创建解析雷达数据线程之前，必须使用startScan函数开启扫图成功
+ *@brief Create a thread to parse radar data
+ *@note Before creating the radar data parsing thread, the startScan function must be used to successfully start the scan.
  */
 result_t DTSLidarDriver::createThread()
 {
@@ -314,27 +314,27 @@ result_t DTSLidarDriver::startScan(bool force, uint32_t timeout)
         return RESULT_FAIL;
     if (m_isScanning)
         return RESULT_OK;
-    //启动前先停止
+    // Stop before starting
     stopScan();
-    //设置默认扫描频率(无)
+    // Set the default scan frequency(none)
     ret = setScanFreq(10.0, timeout);
     if (!IS_OK(ret))
     {
         printf("[YDLIDAR] Fail to setting scan frequency\n");
         return ret;
     }
-    //获取校准参数
+    // Obtain calibration parameters
 //    ret = getCalibParam(timeout);
 //    if (!IS_OK(ret))
 //    {
 //        return ret;
 //    }
 
-    //发送启动雷达命令
+    // Send radar start command
     ScopedLocker l(_cmd_lock);
     if ((ret = sendCmd(SDK_CMD_STARTSCAN)) != RESULT_OK)
         return ret;
-    //双通雷达才等待启动响应命令
+    // The dual-channel radar is waiting for the start-up response command.
     if (!m_SingleChannel)
     {
         ret = waitResp(SDK_CMD_STARTSCAN, timeout);
@@ -345,7 +345,7 @@ result_t DTSLidarDriver::startScan(bool force, uint32_t timeout)
         }
     }
 
-    ret = createThread(); //创建线程
+    ret = createThread(); // Create thread
     return ret;
 }
 
@@ -383,8 +383,8 @@ result_t DTSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
     int pos = 0;
     uint32_t st = getms();
     uint32_t wt = 0;
-    uint16_t dataSize = 0; //data区数据的长度
-    uint16_t cs = 0; //CRC
+    uint16_t dataSize = 0; // The length of the data in the data area
+    uint16_t cs = 0; // CRC
     result_t ret = RESULT_FAIL;
     vector<uint8_t> crCdata;
     memset(node, 0, SDKNODESIZE);
@@ -393,12 +393,12 @@ result_t DTSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
         size_t srcSize = SDKDTSHEADSIZE - pos;
         size_t dstSize = 0;
 
-        //dstSize为实际获取接收到的数据大小
+        // dstSize is the actual size of the received data.
         result_t ans = waitForData(srcSize, timeout - wt, &dstSize);
         if (!IS_OK(ans))
             return ans;
 
-        //从串口中读取指定大小的数据
+        // Read a specified amount of data from the serial port.
         getData(recvBuff.data(), dstSize);
 
         for (size_t i = 0; i < dstSize; ++i)
@@ -429,21 +429,21 @@ result_t DTSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
                 }
                 break;
             case 3:
-                if (c != SDK_CMD_STARTSCAN) //判断解析到的命令字是否和指定命令字是否一致
+                if (c != SDK_CMD_STARTSCAN) // Determine whether the parsed command word matches the specified command word.
                 {
                     pos = 0;
                     continue;
                 }
                 break;
             case 4:
-                if (c != SDK_DTS_RESERVED) //判断解析到的命令字是否和指定命令字是否一致
+                if (c != SDK_DTS_RESERVED) // Determine whether the parsed command word matches the specified command word.
                 {
                     pos = 0;
                     continue;
                 }
                 break;
             case 5:
-                dataSize = uint16_t(c) << 8; //取出data区数据的长度
+                dataSize = uint16_t(c) << 8; // Length of data retrieved from the data area
                 break;
             case 6:
                 dataSize += uint16_t(c);
@@ -455,27 +455,27 @@ result_t DTSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
             crCdata.push_back(c);
         }
 
-        //如果找到协议头
+        // If the protocol header is found
         if (pos == SDKDTSHEADSIZE)
         {
             pos = 0;
-            //获取剩余数据，并计算校验码(data区数据长度 + CRC)
+            // Retrieve the remaining data and calculate the checksum.(Data length in the data area + CRC)
             size_t srcSize = dataSize + 2;
             size_t dstSize = 0;
-            //dstSize为实际获取接收到的数据大小
+            // dstSize is the actual size of the received data.
             ret = waitForData(srcSize, timeout - wt, &dstSize);
             if (!IS_OK(ret))
                 return ret;
-            //从串口中读取指定大小的数据
+            // Read a specified amount of data from the serial port.
             getData(recvBuff.data(), dstSize);
-            //存储数据区的数据(用于计算CRC)
+            // Data in the storage area(Used to calculate CRC)
             for (size_t i = 0; i < dataSize; ++i)
             {
                 crCdata.push_back(recvBuff[i]);
             }
-            //计算校验码
+            // Calculate the check code
             cs = calculateCrc(crCdata);
-            //串口返回的CRC
+            // CRC returned by serial port
             uint16_t csRaw = (recvBuff[dataSize] << 8) | recvBuff[dataSize+1];
             if (cs != csRaw)
             {
@@ -496,13 +496,13 @@ result_t DTSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
         (*node).scanFreq = uint8_t(0);
         (*node).qual = 0;
 
-        //取出主峰质心
+        // Extract the centroid of the main peak
         uint16_t mainPeakQuality = (recvBuff[7] << 8) | recvBuff[6];
         uint16_t qual = (recvBuff[11] << 8) | recvBuff[10];
         (*node).qual = qual;
-        //主峰质心数据转十进制，再减去 b 值，然后再除以 k 值
+        // Convert the main peak centroid data to decimal and then subtract... b value, then divide by k value
         (*node).dist = mainPeakQuality;
-        //这样是不是只有一个点
+        // Is there only one point like this?
         (*node).angle = 0;
         //(*node).qual = 0;
         (*node).is = 0;
@@ -534,12 +534,12 @@ result_t DTSLidarDriver::sendCmd(uint8_t cmd, const uint8_t *data, size_t dataSi
     if (data && dataSize)
         memcpy(&buff[SDKDTSHEADSIZE], data, dataSize);
 
-    //CRC校验
+    // CRC check
     uint16_t cs = calculateCrc(buff);
-//    buff[0] = static_cast<uint8_t>(cs >> 8);  // 将高字节赋给下标为 0 的元素
-//    buff[1] = static_cast<uint8_t>(cs);       // 将低字节赋给下标为 1 的元素
-    buff[size] = static_cast<uint8_t>(cs >> 8);  //将高字节赋给下标为 0 的元素;
-    buff[size+1] = static_cast<uint8_t>(cs);// 将低字节赋给下标为 1 的元素
+//    buff[0] = static_cast<uint8_t>(cs >> 8);  // Assign the high byte to the element at index 0.
+//    buff[1] = static_cast<uint8_t>(cs);       // Assign the low byte to the element at index 1.
+    buff[size] = static_cast<uint8_t>(cs >> 8);  //Assign the high byte to the element at index 0;
+    buff[size+1] = static_cast<uint8_t>(cs);// Assign the low byte to the element at index 1.
     return sendData(buff.data(), buff.size());
 }
 
@@ -579,9 +579,9 @@ result_t DTSLidarDriver::waitResp(
 
 /*
  * @brief DTSLidarDriver::waitResp
- * @param cmd      in:命令字
- * @param data     out:接收到的数据
- * @param timeout  in：超时时间
+ * @param cmd      in: command word
+ * @param data     out: Received data
+ * @param timeout  in：Timeout
  * @return
  */
 result_t DTSLidarDriver::waitResp(
@@ -601,11 +601,11 @@ result_t DTSLidarDriver::waitResp(
     {
         size_t srcSize = SDKDTSHEADSIZE - pos;
         size_t dstSize = 0;
-        //dstSize为实际获取接收到的数据大小
+        // dstSize is the actual size of the received data.
         result_t ans = waitForData(srcSize, timeout - wt, &dstSize);
         if (!IS_OK(ans))
             return ans;
-        //从串口中读取指定大小的数据
+        // Read a specified amount of data from the serial port.
         getData(recvBuff.data(), dstSize);
 
         for (size_t i = 0; i < dstSize; ++i)
@@ -636,21 +636,21 @@ result_t DTSLidarDriver::waitResp(
                 }
                 break;
             case 3:
-                if (c != cmd) //判断解析到的命令字是否和指定命令字是否一致
+                if (c != cmd) // Determine whether the parsed command word matches the specified command word.
                 {
                     pos = 0;
                     continue;
                 }
                 break;
             case 4:
-                if (c != SDK_DTS_RESERVED) //判断解析到的命令字是否和指定命令字是否一致
+                if (c != SDK_DTS_RESERVED) // Determine whether the parsed command word matches the specified command word.
                 {
                     pos = 0;
                     continue;
                 }
                 break;
             case 5:
-                dataSize = uint16_t(c) << 8; //取出data区数据的长度
+                dataSize = uint16_t(c) << 8; // Length of data retrieved from the data area
                 break;
             case 6:
                 dataSize += uint16_t(c);
@@ -663,29 +663,29 @@ result_t DTSLidarDriver::waitResp(
             crCdata.push_back(c);
         }
 
-        //如果找到协议头
+        // If the protocol header is found
         if (pos == SDKDTSHEADSIZE)
         {
             pos = 0;
-            //获取剩余数据，并计算校验码(data区数据长度 + CRC)
+            // Retrieve the remaining data and calculate the checksum.(Data length in the data area + CRC)
             size_t srcSize = dataSize + 2;
             size_t dstSize = 0;
-            //dstSize为实际获取接收到的数据大小
+            // dstSize is the actual size of the received data.
             result_t ans = waitForData(srcSize, timeout - wt, &dstSize);
             if (!IS_OK(ans))
                 return ans;
-            //从串口中读取指定大小的数据
+            // Read a specified amount of data from the serial port.
             getData(recvBuff.data(), dstSize);
 
             for (size_t i = 0; i < dataSize; ++i)
             {
                 crCdata.push_back(recvBuff[i]);
-                data.push_back(recvBuff[i]); //数据存入输出参数
+                data.push_back(recvBuff[i]); // Data stored in output parameter
             }
             cs = calculateCrc(crCdata);
-            //串口返回的CRC
+            // CRC returned by serial port
             uint16_t csRaw = (recvBuff[dataSize] << 8) | recvBuff[dataSize+1];
-            //判断CRC是否一致
+            // Check if CRC is consistent
             if (cs != csRaw)
             {
                 printf("[YDLIDAR] CRC error calc[0x%04X] != src[0x%04X]\n",
@@ -699,25 +699,25 @@ result_t DTSLidarDriver::waitResp(
 }
 
 /*
- * 等待数据函数
- * @param srcSize  in:期望接收的数据大小
- * @param timeout  in:超时时间
- * @param dstSize  out:实际接收到的数据大小
- * @return 返回结果，表示等待数据的状态
+ * Waiting for data function
+ * @param srcSize  in: Expected data size
+ * @param timeout  in: Timeout
+ * @param dstSize  out:Actual received data size
+ * @return The returned result indicates the status of waiting for data.
  */
 result_t DTSLidarDriver::waitForData(size_t srcSize, uint32_t timeout, size_t *dstSize)
 {
-    //用于存储实际接收到的数据大小
+    // Used to store the actual size of the received data.
     size_t size = 0;
 
-    //如果dstSize为空指针，则将其指向size变量
+    // If dstSize is a null pointer, then it will point to the size variable.
     if (!dstSize)
         dstSize = &size;
 
-    //等待数据
+    // Waiting for data
     result_t ret = _serial->waitfordata(srcSize, timeout, dstSize);
 
-    //如果实际接收到的数据大小大于期望大小，则将其截断为期望大小
+    // If the actual received data size is larger than the expected size, it will be truncated to the expected size.
     if (IS_OK(ret))
     {
         if (*dstSize > srcSize)
@@ -727,14 +727,14 @@ result_t DTSLidarDriver::waitForData(size_t srcSize, uint32_t timeout, size_t *d
 }
 
 /*
- * @brief 从串口中读取指定大小的数据
- * @param data   out:存储从串口读取的数据
- * @param size   in:指定需要读取的数据大小
+ * @brief Read a specified amount of data from the serial port.
+ * @param data   out: Store data read from the serial port
+ * @param size   in: Specify the size of the data to be read
  * @return
  */
 result_t DTSLidarDriver::getData(uint8_t *data, size_t size)
 {
-    //检查串口是否打开
+    // Check if the serial port is open.
     if (!_serial || !_serial->isOpen())
     {
         return RESULT_FAIL;
@@ -742,26 +742,26 @@ result_t DTSLidarDriver::getData(uint8_t *data, size_t size)
 
     size_t r;
 
-    //循环读取数据，直到读取完指定的大小
+    // Read data in a loop until the specified size has been read.
     while (size)
     {
-        //从串口读取数据
+        // Reading data from the serial port
         r = _serial->readData(data, size);
 
-        //如果读取失败，则返回失败结果
+        // If the read fails, return a failure result.
         if (!r)
         {
             return RESULT_FAIL;
         }
 
-        //如果开启了调试模式，则打印读取的数据
+        //If debug mode is enabled, print the read data.
         if (m_Debug)
         {
             printf("recv: ");
             printHex(data, r);
         }
 
-        //更新剩余的数据大小和数据指针
+        // Update remaining data size and data pointers
         size -= r;
         data += r;
     }
@@ -769,7 +769,7 @@ result_t DTSLidarDriver::getData(uint8_t *data, size_t size)
     return RESULT_OK;
 }
 
-//设置扫描频率(无)
+// Set scan frequency(none)
 result_t DTSLidarDriver::setScanFreq(float sf, uint32_t timeout)
 {
     m_ScanFreq = 0;
@@ -791,7 +791,7 @@ result_t DTSLidarDriver::getCalibParam(uint32_t timeout)
         return RESULT_FAIL;
     }
 
-    //取出校准参数k,b的值
+    // Extract the values ​​of calibration parameters k and b.
     memcpy(&k, &data[7], sizeof(float));
     memcpy(&b, &data[11], sizeof(float));
 
@@ -913,7 +913,7 @@ result_t DTSLidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
     }
     // printHex(data.data(), data.size());
 
-    //取出校准参数k,b的值
+    // Extract the values ​​of calibration parameters k and b.
     // memcpy(&k, &data[0], sizeof(float));
     // memcpy(&b, &data[4], sizeof(float));
 
@@ -970,7 +970,7 @@ void DTSLidarDriver::flushSerial()
 
 uint16_t DTSLidarDriver::calculateCrc(const vector<uint8_t> &data)
 {
-    uint16_t crc = 0xFFFF;  //初始值为0xFFFF
+    uint16_t crc = 0xFFFF;  // Initial value is 0xFFFF
 
     for (const auto& byte : data)
     {

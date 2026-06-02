@@ -18,7 +18,7 @@ NoiseFilter::~NoiseFilter()
 {
 }
 
-//计算两点连线和原点的夹角（弧度）
+// Calculate the angle (in radians) between the line connecting two points and the origin.
 double NoiseFilter::calcInclineAngle(
         double reading1,
         double reading2,
@@ -28,7 +28,7 @@ double NoiseFilter::calcInclineAngle(
                  reading1 - (cos(angleBetweenReadings) * reading2));
 }
 
-//计算两点的倾斜角（弧度）
+// Calculate the angle of inclination (in radians) between two points.
 double NoiseFilter::calcTargetAngle(
         double reading1,
         double angle1,
@@ -82,7 +82,7 @@ void NoiseFilter::filter_noise(
         int /*version*/,
         LaserScan &out)
 {
-    //range is empty
+    // range is empty
     if (in.points.empty()) {
         out = in;
         return;
@@ -97,7 +97,7 @@ void NoiseFilter::filter_noise(
     double lastIncline = 0;
     bool hasFirst = false;
 
-    //copy attributes to filtered scan
+    // copy attributes to filtered scan
     out = in;
     int pointCount  = 0;
     double lastOffset = 0;
@@ -112,8 +112,8 @@ void NoiseFilter::filter_noise(
     float filter_offset = 0.05;
 
     for (int i = 0; i < nrPoints; i++) {
-        double current_range = in.points[i].range;//current lidar distance
-        double current_angle = in.points[i].angle;//current lidar angle
+        double current_range = in.points[i].range;// current lidar distance
+        double current_angle = in.points[i].angle;// current lidar angle
 
         if (isRangeValid(in.config, current_range)) {
 
@@ -121,13 +121,13 @@ void NoiseFilter::filter_noise(
 
             if (isRangeValid(in.config, lastRange)) {
                 offset = calcTargetOffset(lastRange, lastAngle, current_range,
-                                          current_angle);//calculate offset distance
+                                          current_angle);// calculate offset distance
             } else {
                 offset = calcTargetOffset(lastDistance, preAngle, current_range,
-                                          current_angle);//calculate offset distance
+                                          current_angle);// calculate offset distance
             }
 
-            double Diff = current_range - lastDistance;//distance difference
+            double Diff = current_range - lastDistance;// distance difference
 
             if (fabs(Diff) > lastDistance * 0.2 && fabs(offset) < 0.2 &&
                     isRangeValid(in.config, lastDistance)) {
@@ -186,7 +186,7 @@ void NoiseFilter::filter_noise(
                         if (j >= 0 && j < nrPoints) {
                             double offset = calcTargetOffset(in.points[j].range, in.points[j].angle,
                                                              lastDistance,
-                                                             preAngle);//calculate offset distance
+                                                             preAngle);// calculate offset distance
 
                             if (in.points[j].range > maxDistance) {
                                 maxDistance = in.points[j].range;
@@ -205,20 +205,20 @@ void NoiseFilter::filter_noise(
                 maxDistance = 0.0;
             }
 
-            lastOffset = offset;//last offset
-            lastDiff = Diff;//last distance difference
-            lastDistance = current_range;//last distance
+            lastOffset = offset;// last offset
+            lastDiff = Diff;// last distance difference
+            lastDistance = current_range;// last distance
             preAngle = current_angle;
         }
 
-        lastAngle = current_angle;//last angle
-        lastRange = current_range;//last range
+        lastAngle = current_angle;// last angle
+        lastRange = current_range;// last range
     }
 
-    //mark all masked points as invalid in scan
+    // mark all masked points as invalid in scan
     for (unsigned int i = 0; i < in.points.size(); i++) {
         if (maskedPoints[i]) {
-            //as we don't have a better error this is an other range error for now
+            // as we don't have a better error this is an other range error for now
             out.points[i].range = 0.0;
         }
     }
@@ -252,11 +252,11 @@ void NoiseFilter::filter_tail(
 {
 //    printf("%s\n", __FUNCTION__);
 
-    //假设激光的原点是O，对于任何两个点P1和P2，则形成角∠OP1P2，
-    //如果该角度小于最小阈值角度（min_angle）或大于最大阈值角度（max_angle），
-    //我们将该点及其附近符合条件的点移除。
+    // Assuming the origin of the laser is O, for any two points P1 and P2, the angle ∠OP1P2 is formed.
+    // If the angle is less than the minimum threshold angle (min_angle) or greater than the maximum threshold angle (max_angle).
+    // We remove the point and all nearby points that meet the criteria.
 
-    //range is empty
+    // range is empty
     if (in.points.empty()) {
         out = in;
         return;
@@ -271,7 +271,7 @@ void NoiseFilter::filter_tail(
     double lastIncline = 0;
     bool hasFirst = false;
 
-    //copy attributes to filtered scan
+    // copy attributes to filtered scan
     out = in;
     double lastDistance = 0;
     int max_skip_step = 5 * maskedNeighbours;
@@ -287,8 +287,8 @@ void NoiseFilter::filter_tail(
 
     for (int i = 0; i < size; i++)
     {
-        double range = in.points[i].range;//current lidar distance
-        double angle = in.points[i].angle;//current lidar angle
+        double range = in.points[i].range;// current lidar distance
+        double angle = in.points[i].angle;// current lidar angle
 
         if (isRangeValid(in.config, range)
                 /*&& isRangeValid(in.config, lastDistance)*/)
@@ -307,11 +307,11 @@ void NoiseFilter::filter_tail(
 
                 bool isValid = false;
 
-                //this is a filter for false readings that do occur if one scannes over edgeds of objects
-                //如果计算的夹角超出规定的范围
+                // this is a filter for false readings that do occur if one scannes over edgeds of objects
+                // If the calculated included angle exceeds the specified range
                 if (incline < minIncline || incline > maxIncline)
                 {
-                    //mask neighbour points
+                    // mask neighbour points
                     for (int j = -maskedNeighbours; j < maskedNeighbours; j++)
                     {
                         if ((int(i) + j < 0)
@@ -322,11 +322,11 @@ void NoiseFilter::filter_tail(
                             continue;
                         }
 
-                        //如果当前点相邻N点中有偏移量较大的点则认为是噪点
+                        // If there are points with large offsets among the N neighboring points of the current point, they are considered noise points.
                         double offset = calcTargetOffset(in.points[i + j - 1].range,
                                 in.points[i + j - 1].angle,
                                 in.points[i + j].range,
-                                in.points[i + j].angle); //calculate offset distance
+                                in.points[i + j].angle); // calculate offset distance
                         if (offset < 0.2) {
                             maskedPoints[i + j] = true;
                             isValid = true;
@@ -350,7 +350,7 @@ void NoiseFilter::filter_tail(
                     inValidPointCount++;
                 }
 
-                //如果上一个夹角和当前夹角差值过大则认为是噪点
+                // If the difference between the previous angle and the current angle is too large, it is considered noise.
                 if (fabs(lastIncline - incline) > maxIncline - minIncline) {
                     maskedPoints[i] = true;
                 }
@@ -359,7 +359,7 @@ void NoiseFilter::filter_tail(
                 lastIncline = incline;
             }
 
-            lastDistance = range;//last distance
+            lastDistance = range;// last distance
         }
 
         if (inValidPointCount > max_skip_step) {
@@ -369,8 +369,8 @@ void NoiseFilter::filter_tail(
             }
         }
 
-        lastAngle = angle;//last angle
-        lastRange = range;//last range
+        lastAngle = angle;// last angle
+        lastRange = range;// last range
     }
 
     /*for (int i = 0; i < m_block_vct.size(); i++) {
@@ -415,7 +415,7 @@ void NoiseFilter::filter_tail(
     }
   }*/
 
-    //mark all masked points as invalid in scan
+    // mark all masked points as invalid in scan
     for (unsigned int i = 0; i < in.points.size(); i++) {
         if (maskedPoints[i]) {
             //as we don't have a better error this is an other range error for now
@@ -451,24 +451,24 @@ void NoiseFilter::filter_tail2(
         return;
     }
 
-    //1、找出连续（至少3个）点倾斜角朝向原点（极点）的点序列
-    //2、判断该点序列首尾点组成的角度范围是否在光斑对应角度范围内
-    //3、判断该点序列的强度信息是否满足约定条件（未找到规律，暂未使用）
-    //4、去掉该点序列的首尾点（首尾点是正常的）
+    // 1. Find a sequence of points (at least 3) whose tilt angles point towards the origin (pole).
+    // 2. Determine whether the angular range formed by the first and last points of the point sequence is within the corresponding angular range of the light spot.
+    // 3. Determine whether the intensity information of the sequence at this point meets the agreed conditions (no pattern found, not yet used).
+    // 4. Remove the first and last points of the sequence (the first and last points are normal).
 
-    std::vector<bool> noises; //是否为噪点的标记
-    size_t size = in.points.size(); //一圈点数
-    size_t lastIndex = 0; //上一个有效点的索引位置
-    LaserPoint lastP; //上一个点信息
-    float lastIncline = .0; //上一个倾斜角
-    float lastAngle = 90.0; //上一个夹角
-    size_t pos = 0; //标记拖尾起始点下标位置
-    //    bool hasNoise = false; //是否需要处理噪点的标志
-    size_t sizeEx = size + (size * 2 / 100 + 1); //将遍历范围扩大到原数组的102%以便处理首尾部分的点
+    std::vector<bool> noises; // Is it a noise marker?
+    size_t size = in.points.size(); // Points per lap
+    size_t lastIndex = 0; // Index position of the previous valid point
+    LaserPoint lastP; // Previous point information
+    float lastIncline = .0; // Previous tilt angle
+    float lastAngle = 90.0; // Previous angle
+    size_t pos = 0; // Mark the starting point of the trail index.
+    //    bool hasNoise = false; // Whether noise needs to be processed.
+    size_t sizeEx = size + (size * 2 / 100 + 1); // Expand the traversal range to 102% of the original array to handle the first and last points.
 
     noises.resize(size, false);
 
-    //主循环函数
+    // main loop function
     for (size_t i = 0; i < sizeEx; ++i)
     {
         const LaserPoint& p = in.points.at(i % size);
@@ -480,7 +480,7 @@ void NoiseFilter::filter_tail2(
 
         if (i != 0)
         {
-            //计算两点连线、两点中间点到原点连线的倾斜角（弧度值）
+            // Calculate the angle (in radians) of inclination of the line connecting two points and the line connecting the midpoint of the two points to the origin.
             float incline2 = calcTargetAngle(
                         lastP.range,
                         lastP.angle,
@@ -491,13 +491,13 @@ void NoiseFilter::filter_tail2(
                         (lastP.angle + p.angle) / 2.0f,
                         0.0f,
                         0.0f);
-            //转角度值
+            // Rotation angle value
             incline2 = ydlidar::core::math::to_degrees(incline2);
             incline3 = ydlidar::core::math::to_degrees(incline3);
 
             float incline = incline2;
 
-            //计算两点连线和两点中间点到原点连线的夹角
+            // Calculate the angle between the line connecting two points and the line connecting the midpoint of the two points to the origin.
             float angle = fabs(incline2 - incline3);
             if (angle > 180.0f)
                 angle = 360.0f - angle;
@@ -512,24 +512,24 @@ void NoiseFilter::filter_tail2(
             //                      qRadiansToDegrees(p.angle),
             //                      p.intensity);
 
-            //如果倾斜角变化很小则认为是一条直线上的
+            // If the change in the tilt angle is very small, it is considered to be on a straight line.
             if (fabs(incline - lastIncline) < maxInclineAngle)
             {
-                //如果上一个夹角不满足要求
+                // If the previous included angle does not meet the requirements
                 if (fabs(lastAngle) >= maxIncludeAngle)
                 {
                     pos = 0;
                 }
-                //TODO: 需要考虑是否是最后一个点
+                // TODO: We need to consider whether this is the last point.
             }
             else
             {
-                if (fabs(lastAngle) < maxIncludeAngle) //判断上一个夹角是否满足要求
+                if (fabs(lastAngle) < maxIncludeAngle) // Determine if the previous included angle meets the requirements.
                 {
-                    //判断点的个数是否超过2个，超过2个才可能是拖尾噪点
+                    // Check if the number of points exceeds two; only if it exceeds two is it likely to be trailing noise.
                     if (0 != pos && i - pos >= MIN_NOISEPOINT_COUNT)
                     {
-                        //统计从位置pos到i的有效点数
+                        // Count the number of valid points from position pos to i.
                         size_t validCount = 0;
                         for (size_t j=pos; j<=i; ++j)
                         {
@@ -547,9 +547,9 @@ void NoiseFilter::filter_tail2(
                     }
                     pos = 0;
                 }
-                if (0 == pos && fabs(angle) < maxIncludeAngle) //判断当前夹角是否满足要求
+                if (0 == pos && fabs(angle) < maxIncludeAngle) // Determine if the current included angle meets the requirements.
                 {
-                    //疑似拖尾点，标记
+                    // Suspected trailing point, marked.
                     pos = lastIndex;
                 }
                 else
@@ -566,7 +566,7 @@ void NoiseFilter::filter_tail2(
         lastP = p;
     }
 
-    //处理被标记的点
+    // Process the marked points
     size_t noiseCount = 0;
     for (size_t i = 0; i < size; ++i)
     {
