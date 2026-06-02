@@ -642,9 +642,9 @@ class YDlidarDriver : public DriverInterface {
   uint32_t m_heartbeat_ts;
   uint8_t m_BlockRevSize;
 
-  uint32_t m_dataPos = 0; //记录当前解析到的数据的位置（解析是否带强度信息专用）
-  uint64_t stamp = 0; //时间戳
-  bool hasStamp = true; //是否有时间戳数据
+  uint32_t m_dataPos = 0; // Record the position of the currently parsed data (specifically for parsing whether intensity information is included).
+  uint64_t stamp = 0; // Time stamp
+  bool hasStamp = true; // Whether there is time stamp data
 };
 
 }// namespace ydlidar

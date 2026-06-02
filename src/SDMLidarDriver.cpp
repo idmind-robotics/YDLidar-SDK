@@ -44,7 +44,7 @@ namespace ydlidar
 SDMLidarDriver::SDMLidarDriver() 
     : _serial(NULL)
 {
-    // 串口配置参数
+    // Serial port configuration parameters
     m_intensities = false;
     isAutoReconnect = true;
     isAutoconnting = false;
@@ -331,7 +331,7 @@ result_t SDMLidarDriver::waitResp(
                 }
                 break;
             case 2:
-                if (c != cmd) //判断解析到的命令字是否和指定命令字是否一致
+                if (c != cmd) // Determine whether the parsed command word matches the specified command word.
                 {
                     pos = 0;
                     cs = 0;
@@ -349,10 +349,10 @@ result_t SDMLidarDriver::waitResp(
             cs += c;
         }
 
-        //如果找到协议头
+        // If the protocol header is found
         if (pos == SDKSDMHEADSIZE)
         {
-            //获取剩余数据，并计算校验和
+            // Retrieve the remaining data and calculate the checksum.
             size_t srcSize = dataSize + 1;
             size_t dstSize = 0;
             result_t ans = waitForData(srcSize, timeout - wt, &dstSize);
@@ -362,9 +362,9 @@ result_t SDMLidarDriver::waitResp(
             for (size_t i = 0; i < dataSize; ++i)
             {
                 cs += recvBuff[i];
-                data.push_back(recvBuff[i]); //数据存入输出参数
+                data.push_back(recvBuff[i]); // Data storage and output parameters
             }
-            if (cs != recvBuff[dataSize]) //判断校验和是否一致
+            if (cs != recvBuff[dataSize]) // Determine whether the calculated checksum matches the checksum in the protocol.
             {
                 printf("[YDLIDAR] CMD CheckSum error calc[0x%02X] != src[0x%02X]\n",
                         cs, recvBuff[dataSize]);
@@ -480,7 +480,7 @@ int SDMLidarDriver::cacheScanData()
     {
         count = SDK_SDM_POINT_COUNT;
         ret = waitScanData(local_buf, count);
-        if (!IS_OK(ret)) // 如果解析点云失败
+        if (!IS_OK(ret)) // If parsing point cloud fails
         {
             if (IS_FAIL(ret) ||
                 timeout_count > DEFAULT_TIMEOUT_COUNT)
@@ -522,7 +522,7 @@ int SDMLidarDriver::cacheScanData()
             // printf("[YDLIDAR] SDM points Stored in buffer %lu\n", count);
             ScopedLocker l(_lock);
             memcpy(scan_node_buf, local_buf, sizeof(node_info) * SDK_SDM_POINT_COUNT);
-            scan_node_count = SDK_SDM_POINT_COUNT; // 一个包固定1个点
+            scan_node_count = SDK_SDM_POINT_COUNT; // One package is fixed at one point.
             _dataEvent.set();
             scan_count = 0;
         }
@@ -586,7 +586,7 @@ result_t SDMLidarDriver::waitPackage(node_info *node, uint32_t timeout)
                 break;
             case 3:
                 dataSize = c;
-                if (!c) // 如果数据长度无效则跳过
+                if (!c) // If the data length is invalid, skip
                 {
                     pos = 0;
                     cs = 0;
@@ -601,10 +601,10 @@ result_t SDMLidarDriver::waitPackage(node_info *node, uint32_t timeout)
             cs += c;
         }
 
-        // 如果找到协议头
+        // If the protocol header is found
         if (pos == SDKSDMHEADSIZE)
         {
-            // 获取剩余数据，并计算校验和
+            // Retrieve the remaining data and calculate the checksum
             size_t srcSize = dataSize + 1;
             size_t dstSize = 0;
             ret = waitForData(srcSize, timeout - wt, &dstSize);
@@ -710,10 +710,10 @@ result_t SDMLidarDriver::grabScanData(
 }
 
 /**
- * @brief 设置雷达异常自动重新连接 \n
- * @param[in] enable    是否开启自动重连:
- *     true	开启
- *	  false 关闭
+ * @brief Configure automatic reconnection in case of radar malfunction. \n
+ * @param[in] enable    Whether to enable automatic reconnection:
+ *     true	Enable
+ *	  false Disable
     */
 void SDMLidarDriver::setAutoReconnect(const bool &enable)
 {
@@ -722,7 +722,7 @@ void SDMLidarDriver::setAutoReconnect(const bool &enable)
 
 // void SDMLidarDriver::checkTransDelay()
 // {
-//     //采样率
+//     // Sampling rate
 //     trans_delay = _serial->getByteTime();
 //     sample_rate = 27 * 160;
 //     m_PointTime = 1e9 / sample_rate;
@@ -740,8 +740,8 @@ result_t SDMLidarDriver::startScan(bool force, uint32_t timeout)
     if (m_isScanning)
         return RESULT_OK;
 
-    stopScan(); //启动前先停止
-    //启动前先设置扫描频率
+    stopScan(); // Stop before starting
+    // Set the scan frequency before starting.
     if (!IS_OK(setScanFreq(m_ScanFreq, 500)))
     {
         printf("[YDLIDAR] Set scan frequency %.01f failed!\n", m_ScanFreq);
@@ -749,11 +749,11 @@ result_t SDMLidarDriver::startScan(bool force, uint32_t timeout)
     }
 
     {
-        //发送启动雷达命令
+        // Send radar start command
         ScopedLocker l(_cmd_lock);
         if ((ret = sendCmd(SDK_CMD_STARTSCAN)) != RESULT_OK)
             return ret;
-        //双通雷达才发送启动命令
+        // Dual-channel radar sends start command
         if (!m_SingleChannel)
         {
             ret = waitResp(SDK_CMD_STARTSCAN, timeout);
@@ -795,7 +795,7 @@ result_t SDMLidarDriver::stopScan(uint32_t timeout)
 
 result_t SDMLidarDriver::createThread()
 {
-    // 如果线程已启动，则先退出线程
+    // If the thread has already started, exit the thread first.
     if (_thread.getHandle())
     {
         m_isScanning = false;
@@ -921,7 +921,7 @@ result_t SDMLidarDriver::setScanFreq(float sf, uint32_t timeout)
     if (!data.size())
         return RESULT_FAIL;
     d = data.at(0);
-    //根据返回的扫描频率更新当前扫描频率
+    // Update the current scan frequency based on the returned scan frequency.
     for (int i=0; i<size; ++i)
     {
         if (d == i)
@@ -972,7 +972,7 @@ result_t SDMLidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
 
     // printf("%s %llu\n", __FUNCTION__, data.size());
 
-    if (data.size() == SDKSDMDEVICEINFOSIZE) //新版设备信息（带序列号）
+    if (data.size() == SDKSDMDEVICEINFOSIZE) // New device information (with serial number)
     {
         SdkSdmDeviceInfo di;
         memcpy(&di, data.data(), data.size());
@@ -982,7 +982,7 @@ result_t SDMLidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
         memcpy(info.serialnum, di.sn, SDK_SNLEN);
         return RESULT_OK;
     }
-    else if (data.size() == 3) //旧版设备信息（不带序列号）
+    else if (data.size() == 3) // Old device information (without serial number)
     {
         info.model = YDLIDAR_SDM15;
         info.hardware_version = data[0];

@@ -39,15 +39,15 @@
 #include <core/network/ActiveSocket.h>
 #include "ydlidar_config.h"
 
-#define GS_CMD_STARTIAP 0x0A //启动IAP
-#define GS_CMD_EXECIAP 0x0B //运行IAP，传输数据包
-#define GS_CMD_STOPIAP 0x0C //停止IAP
-#define GS_CMD_ACKIAP 0x20 //IAP应答
-#define GS_CMD_RESET 0x67 //复位
-#define GS_CMD_ACKOK 0x01 //正常
-#define GS_CMD_ZERO 0x00 //0
+#define GS_CMD_STARTIAP 0x0A // Start IAP
+#define GS_CMD_EXECIAP 0x0B // Run IAP, transfer data packets
+#define GS_CMD_STOPIAP 0x0C // Stop IAP
+#define GS_CMD_ACKIAP 0x20 // IAP acknowledgement
+#define GS_CMD_RESET 0x67 // Reset
+#define GS_CMD_ACKOK 0x01 // OK
+#define GS_CMD_ZERO 0x00 // Zero
 
-#define DATA_LEN_PER_FRAME (81 - 18 + 1) //每帧数据长度
+#define DATA_LEN_PER_FRAME (81 - 18 + 1) // Length of each data frame
 
 using namespace impl;
 
@@ -58,7 +58,7 @@ using namespace core::network;
 
 GSLidarDriver::GSLidarDriver(uint8_t type)
 {
-    //串口配置参数
+    // Serial port configuration parameters
     m_intensities       = false;
     isAutoReconnect     = true;
     m_baudrate          = 230400;
@@ -70,7 +70,7 @@ GSLidarDriver::GSLidarDriver(uint8_t type)
     m_SingleChannel     = false;
     m_LidarType         = TYPE_GS;
     m_DeviceType = type;
-    //解析参数
+    // Parsing parameters
     PackageSampleBytes  = 2;
     CheckSum            = 0;
     CheckSumCal         = 0;
@@ -144,7 +144,7 @@ result_t GSLidarDriver::connect(const char *port_path, uint32_t baudrate)
     stopScan();
     // delay(100);
     // clearDTR();
-    //配置GS2模组地址（三个模组）
+    // Configure GS2 module address (three modules)
     setDeviceAddress(300);
 
     return RESULT_OK;
@@ -548,7 +548,7 @@ result_t GSLidarDriver::checkAutoConnecting()
                 }
             }
         }
-        delay(100); //延时
+        delay(100); // delay
 
         while (isscanning() &&
                connect(m_port.c_str(), m_baudrate) != RESULT_OK)
@@ -560,7 +560,7 @@ result_t GSLidarDriver::checkAutoConnecting()
         if (!isscanning()) {
             return RESULT_FAIL;
         }
-        //判断是否已重连，如是则尝试启动雷达
+        // Check if reconnect succeeded; if so, try to start the lidar
         if (isconnected()) 
         {
             delay(100);
@@ -609,7 +609,7 @@ int GSLidarDriver::cacheScanData()
             }
             fprintf(stderr, "[GSLIDAR] Timeout count: %d\n", timeout_count);
             fflush(stderr);
-            // 重连雷达
+            // Reconnect lidar
             if (!isAutoReconnect)
             {
                 fprintf(stderr, "[GSLIDAR] Exit scanning thread\n");
@@ -637,7 +637,7 @@ int GSLidarDriver::cacheScanData()
             retryCount = 0;
 
             {
-            //数据存入数组
+            // Store data into buffer
             ScopedLocker l(_lock);
             gs_module_nodes nodes;
             nodes.moduleNum = moduleNum;
@@ -673,7 +673,7 @@ result_t GSLidarDriver::waitPackage(node_info *node, uint32_t timeout)
         pos = 0;
         while ((waitTime = getms() - startTs) < timeout)
         {
-            //解析协议头部分
+            // Parse protocol header section
             remainSize = GS_PACKHEADSIZE - pos;
             recvSize = 0;
             ret = waitForData(remainSize, timeout - waitTime, &recvSize);
@@ -718,9 +718,9 @@ PARSEHEAD:
                     }
                     break;
                 case 4:
-                    if (c == LIDAR_ANS_SYNC_BYTE1) //过滤出现超过4个包头标识的情况
+                    if (c == LIDAR_ANS_SYNC_BYTE1) // Filter out cases where more than 4 packet header markers appear
                         continue;
-                    moduleNum = uint8_t(c >> 1); //模组地址转编号: 1, 2, 4
+                    moduleNum = uint8_t(c >> 1); // Convert module address to index: 1, 2, 4
                     CheckSumCal = c;
                     break;
                 case 5:
@@ -747,26 +747,26 @@ PARSEHEAD:
 
                 packageBuffer[pos++] = c;
 
-                // 如果解析到协议头
+                // If the protocol header has been parsed
                 if (pos == GS_PACKHEADSIZE)
                 {
-                    // 如果协议数据长度不对则跳过，继续解析协议头
+                    // If protocol data length is invalid, skip and continue parsing headers
                     if (!sample_lens || sample_lens >= GSPACKSIZE)
                     {
                         moduleNum = 0;
                         pos = 0;
                         continue;
                     }
-                    package_Sample_Num = sample_lens + 1; // 环境2Bytes + 点云320Bytes + CRC
+                    package_Sample_Num = sample_lens + 1; // Environment 2 bytes + point cloud 320 bytes + CRC
                     package_recvPos = pos;
-                    nodeCount = (sample_lens - 2) / GSNODESIZE; //计算1包数据中的点数
+                    nodeCount = (sample_lens - 2) / GSNODESIZE; // Calculate number of points in one packet
                     // printf("sample num %d\n", (package_Sample_Num - 3) / 2);
                     pos = 0;
-                    // 解析协议数据部分
+                    // Parse protocol data section
                     while ((waitTime = getms() - startTs) <= timeout)
                     {
-                        int offset = 0; // 缓存偏移量
-                        // 如果解析协议头时接收数据长度超过定义的长度则认为是从校验和错误处跳转过来的
+                        int offset = 0; // Buffer offset
+                        // If received header data length exceeds defined length, assume it's resuming after a checksum error
                         if (recvSize > GS_PACKHEADSIZE)
                         {
                             offset = i + 1;
@@ -801,13 +801,13 @@ PARSEHEAD:
                         if (pos == package_Sample_Num)
                         {
                             pos = 0;
-                            // 判断校验和是否一致
+                            // Check whether checksum matches
                             if (CheckSumCal != CheckSum)
                             {
                                 CheckSumResult = false;
                                 error("GS cs 0x%02X != 0x%02X", CheckSumCal, CheckSum);
-                                // 如果校验和不一致，则需要跳转去当前缓存中查找协议头，
-                                // 以免因当前数据包有缺失导致下一包数据解析失败
+                                // If checksum mismatch occurs, jump to search for the protocol header in current buffer,
+                                // to avoid next packet parsing failure due to missing data in current packet
                                 goto PARSEHEAD;
                             }
                             else
@@ -821,7 +821,7 @@ PARSEHEAD:
                             }
                             break;
                         }
-                        recvSize = 0; //重置缓存数据大小
+                        recvSize = 0; // Reset cached data size
                     }
 
                     break;
@@ -833,10 +833,10 @@ PARSEHEAD:
 
         if (CheckSumResult)
         {
-            model = m_models[moduleNum]; //当前雷达型号
+            model = m_models[moduleNum]; // Current lidar model
             if (m_Debug)
                 printf("GS Lidar Module[%d] Model[%u]\n", moduleNum, model);
-            //根据雷达型号设置角度参数
+            // Set angle parameters according to lidar model
             if (YDLIDAR_GS5 == model)
                 m_pitchAngle = Angle_PAngle2;
             else
@@ -848,7 +848,7 @@ PARSEHEAD:
     
     if (CheckSumResult)
     {
-        //第1个点时间戳使用上一帧的最后1个点的时间戳
+        // First point timestamp uses the last point timestamp from previous frame
         if (nodeIndex == 0)
             (*node).stamp = stamp ? stamp : getTime();
         else
@@ -862,26 +862,26 @@ PARSEHEAD:
 
         if (YDLIDAR_GS1 == model)
         {
-            //GS1低10位为距离，高6位为信号强度
+            // GS1 lower 10 bits are distance, upper 6 bits are signal strength
             (*node).dist = uint16_t(package.nodes[nodeIndex].node & 0x03FF);
-            //如果配置了信号强度则处理信号强度
+            // If intensities are enabled, process signal strength
             if (m_intensities)
                 (*node).qual = uint16_t(package.nodes[nodeIndex].node >> 10);
         }
         else if (YDLIDAR_GS5 == model ||
             YDLIDAR_GS6 == model)
         {
-            //GS5、GS6低11位为距离，高5位为信号强度
+            // GS5/GS6 lower 11 bits are distance, upper 5 bits are signal strength
             (*node).dist = uint16_t(package.nodes[nodeIndex].node & 0x07FF);
-            //如果配置了信号强度则处理信号强度
+            // If intensities are enabled, process signal strength
             if (m_intensities)
                 (*node).qual = uint16_t(package.nodes[nodeIndex].node >> 11);
         }
         else
         {
-            //GS2低9位为距离，高7位为信号强度
+            // GS2 lower 9 bits are distance, upper 7 bits are signal strength
             (*node).dist = uint16_t(package.nodes[nodeIndex].node & 0x01FF);
-            //如果配置了信号强度则处理信号强度
+            // If intensities are enabled, process signal strength
             if (m_intensities)
                 (*node).qual = uint16_t(package.nodes[nodeIndex].node >> 9);
         }
@@ -922,7 +922,7 @@ PARSEHEAD:
         if (YDLIDAR_GS2 == model ||
             YDLIDAR_GS5 == model)
         {
-            // 过滤左右相机超过0°的点
+            // Filter points beyond 0° for left/right cameras
             if (nodeIndex < 80)
             { // CT_RingStart  CT_Normal
                 if ((*node).angle <= 23041)
@@ -939,7 +939,7 @@ PARSEHEAD:
             }
         }
 
-        //处理环境数据（2个字节分别存储在两个点的is属性中）
+        // Process environment data (2 bytes stored separately in the is field of two points)
         if (0 == nodeIndex)
             (*node).is = package.env & 0xFF;
         else if (1 == nodeIndex)
@@ -1110,7 +1110,7 @@ result_t GSLidarDriver::grabScanData(
             ScopedLocker l(_lock);
             if (datas.size())
             {
-                //从数组中取出点云数据
+                // Get point cloud data from the buffer
                 gs_module_nodes ns = datas.front();
                 datas.pop_front();
                 size_t size = min(int(count), ns.pointCount);
@@ -1119,13 +1119,13 @@ result_t GSLidarDriver::grabScanData(
                 return RESULT_OK;
             }
         }
-        delay(1); //延时
+        delay(1); // delay
     }
     return RESULT_TIMEOUT;
 
     // node_info packNodes[LIDAR_PACKMAXPOINTSIZE];
-    // size_t packCount = 0; //单包点数
-    // size_t currCount = 0; //当前点数
+    // size_t packCount = 0; // Points in a single packet
+    // size_t currCount = 0; // Current point count
     // result_t ans = RESULT_FAIL;
     // uint32_t st = getms();
     // uint32_t wt = 0;
@@ -1135,7 +1135,7 @@ result_t GSLidarDriver::grabScanData(
     //   ans = waitScanData(packNodes, packCount, timeout - wt);
     //   if (!IS_OK(ans))
     //   {
-    //     return ans; //失败时直接返回
+    //     return ans; // Return immediately on failure
     //   } 
     //   else 
     //   {
@@ -1371,10 +1371,10 @@ void GSLidarDriver::setIntensities(const bool &isintensities)
     }
 }
 /**
-* @brief 设置雷达异常自动重新连接 \n
-* @param[in] enable    是否开启自动重连:
-*     true	开启
-*	  false 关闭
+* @brief Set lidar auto reconnect on exception \n
+* @param[in] enable    Whether to enable auto reconnect:
+*     true    enable
+*     false   disable
 */
 void GSLidarDriver::setAutoReconnect(const bool &enable) 
 {
@@ -1383,7 +1383,7 @@ void GSLidarDriver::setAutoReconnect(const bool &enable)
 
 void GSLidarDriver::checkTransDelay() 
 {
-    //采样率
+    // Sampling rate
     trans_delay = _comm->getByteTime();
     sample_rate = 27 * 160;
     m_PointTime = 1e9 / sample_rate;
@@ -1407,7 +1407,7 @@ result_t GSLidarDriver::startScan(bool force, uint32_t timeout)
     checkTransDelay();
     flushSerial();
 
-    //获取GS2参数
+    // Get GS2 parameters
     gs_device_para gs2_info;
     ans = getDevicePara(gs2_info, 300);
     if (IS_OK(ans))
@@ -1423,7 +1423,7 @@ result_t GSLidarDriver::startScan(bool force, uint32_t timeout)
         if ((ans = waitResponseHeaderEx(&h, GS_LIDAR_CMD_SCAN, timeout)) != RESULT_OK) {
             return ans;
         }
-        //启动线程
+        // Start thread
         ans = createThread();
         m_isScanning = true;
     }
@@ -1455,7 +1455,7 @@ result_t GSLidarDriver::stopScan(uint32_t timeout)
 
 result_t GSLidarDriver::createThread()
 {
-    // 如果线程已启动，则先退出线程
+    // If thread already exists, stop it first
     // if (_thread.getHandle())
     // {
     //     m_isScanning = false;
@@ -1573,7 +1573,7 @@ result_t GSLidarDriver::getDeviceInfo(device_info &info, uint32_t timeout)
         return RESULT_FAIL;
     }
 
-    //尝试获取雷达型号
+    // Try to get lidar model
     ret = getDeviceInfo2(info, timeout);
     if (!IS_OK(ret))
     {
@@ -1593,14 +1593,14 @@ result_t GSLidarDriver::getDeviceInfo(
     std::vector<device_info_ex> &dis,
     uint32_t timeout)
 {
-    //1、获取级联雷达数量
+    // 1. Get number of cascaded lidars
     result_t ret = setDeviceAddress(timeout);
     if (!IS_OK(ret))
     {
         printf("[YDLIDAR] Fail to get GS lidar count");
         return ret;
     }
-    //2、获取设备信息（带雷达型号码）
+    // 2. Get device info (with lidar model number)
     uint8_t c = moduleCount;
     ScopedLocker l(_lock);
     ret = sendCommand(GS_LIDAR_CMD_GET_VERSION3);
@@ -1636,7 +1636,7 @@ result_t GSLidarDriver::getDeviceInfo(
     }
     if (IS_OK(ret))
         return ret;
-    //3、获取设备信息（不带雷达型号码）
+    // 3. Get device info (without lidar model number)
     ret = sendCommand(GS_LIDAR_CMD_GET_VERSION);
     for (uint8_t i=0; i<c; ++i)
     {
@@ -1701,7 +1701,7 @@ result_t GSLidarDriver::getDeviceInfo1(device_info &info, uint32_t timeout)
             info.firmware_version = uint16_t((di.fwVersion & 0xFF) << 8) +
                 uint16_t(di.fwVersion >> 8);
             memcpy(info.serialnum, di.sn, SDK_SNLEN);
-            // head.address; //雷达序号
+            // head.address; // Lidar index
             m_HasDeviceInfo |= EPT_Module | EPT_Base;
         }
     }
@@ -1713,7 +1713,7 @@ result_t GSLidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
 {
     result_t ret = RESULT_FAIL;
 
-    //获取设备信息，包含雷达型号（对外协议）
+    // Get device info including lidar model (external protocol)
     ScopedLocker l(_lock);
     ret = sendCommand(GS_LIDAR_CMD_GET_VERSION3);
     if (!IS_OK(ret))
@@ -1736,7 +1736,7 @@ result_t GSLidarDriver::getDeviceInfo2(device_info &info, uint32_t timeout)
         memset(&di, 0, GSDEVINFO2SIZE);
         getData(reinterpret_cast<uint8_t*>(&di), GSDEVINFO2SIZE);
         
-        uint8_t id = uint8_t(head.address >> 1); //模组地址转编号: 1, 2, 4
+        uint8_t id = uint8_t(head.address >> 1); // Convert module address to index: 1, 2, 4
         m_models[id] = di.model;
         printf("Get Module[%d] Lidar model[%u]\n", id, di.model);
         if (LIDAR_MODULE_1 == head.address)
@@ -1763,7 +1763,7 @@ result_t GSLidarDriver::setWorkMode(int mode, uint8_t addr)
         return RESULT_FAIL;
     }
 
-    //如果已经开启扫描，则先停止扫描
+    // If scan is already active, stop it first
     if (isscanning())
     {
         disableDataGrabbing();
@@ -1797,7 +1797,7 @@ bool GSLidarDriver::ota()
         printf("[YDLIDAR OTA] Not set OTA file\n");
         return false;
     }
-    // 读取文件所有内容
+    // Read entire file contents
     std::ifstream f;
     f.open(m_OtaName, ios::in | ios::binary);
     if (!f.is_open())
@@ -1805,45 +1805,45 @@ bool GSLidarDriver::ota()
         printf("[YDLIDAR OTA] Fail to open OTA file[%s]\n", m_OtaName.c_str());
         return false;
     }
-    //读数据
+    // Read data
     std::vector<uint8_t> data;
     while (!f.eof())
     {
         std::vector<uint8_t> d(DATA_LEN_PER_FRAME);
         memset(d.data(), GS_CMD_ZERO, d.size());
         f.read(reinterpret_cast<char*>(d.data()), d.size());
-        int s = f.gcount(); //获取读取成功的字节数
+        int s = f.gcount(); // Number of bytes successfully read
         for (int i=0; i<s; ++i)
             data.push_back(d.at(i));
     }
     printf("[YDLIDAR OTA] File size [%.02lf]KB\n", data.size() / 1024.0);
 
-    int count = moduleCount; // 雷达数量
+    int count = moduleCount; // Number of lidars
     for (int i = 0; i < count; ++i)
     {
         uint8_t addr = 1 << i;
-        // 开始OTA
+        // Start OTA
         if (!startOta(addr))
         {
             printf("[YDLIDAR 0x%02X] Fail to Start OTA\n", addr);
             return false;
         }
 
-        // 下载数据
+        // Download data
         if (!execOta(addr, data))
         {
             printf("[YDLIDAR 0x%02X] Fail to download data\n", addr);
             return false;
         }
 
-        // 停止OTA
+        // Stop OTA
         if (!stopOta(addr))
         {
             printf("[YDLIDAR 0x%02X] Fail to Start OTA\n", addr);
             return false;
         }
 
-        // 重启雷达
+        // Restart lidar
         if (!IS_OK(reset(addr, TIMEOUT_1S)))
         {
             printf("[YDLIDAR 0x%02X] Fail to restart gs lidar\n", addr);
@@ -1858,7 +1858,7 @@ bool GSLidarDriver::ota()
 
 bool GSLidarDriver::startOta(uint8_t addr)
 {
-    //发送启动OTA命令
+    // Send start OTA command
     std::vector<uint8_t> d;
     uint8_t dsr[] = {0x00, 0x00,
                     0x73, 0x74, 0x61, 0x72, 0x74, 0x20, 0x64, 0x6F,
@@ -1887,18 +1887,18 @@ bool GSLidarDriver::startOta(uint8_t addr)
 
 bool GSLidarDriver::execOta(uint8_t addr, const std::vector<uint8_t>& data)
 {
-    // 数据中固定部分（字符串“downloading”）
+    // Fixed part in the data (string "downloading")
     uint8_t fix[] = {0x64, 0x6F, 0x77, 0x6E, 0x6C, 0x6F, 0x61, 0x64,
                      0x69, 0x6E, 0x67, 0x00, 0x00, 0x00, 0x00, 0x00};
     bool ret = false;
-    // 计算固件分成的数据包数
+    // Calculate number of firmware packets
     int n = data.size() % DATA_LEN_PER_FRAME;
     int m = data.size() / DATA_LEN_PER_FRAME + (n ? 1 : 0); 
 
     int percent = -1;
     for (int j = 0; j < m; ++j)
     {
-        // 打印进度
+        // Print progress
         int p = int(j * 100.0 / m);
         if (p != percent)
         {
@@ -1907,7 +1907,7 @@ bool GSLidarDriver::execOta(uint8_t addr, const std::vector<uint8_t>& data)
         }
 
         std::vector<uint8_t> d;
-        int offset = j * DATA_LEN_PER_FRAME; // 数据偏移量
+        int offset = j * DATA_LEN_PER_FRAME; // Data offset
         d.push_back(offset & 0xFF);
         d.push_back(offset >> 8);
         for (int i = 0; i < sizeof(fix); ++i)
@@ -1955,7 +1955,7 @@ bool GSLidarDriver::stopOta(uint8_t addr)
                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     for (int i = 0; i < sizeof(dsr); ++i)
         d.push_back(dsr[i]);
-    // 是否加密标识
+    // Encryption flag
     d.push_back(m_OtaEncode);
     d.push_back(GS_CMD_ZERO);
     d.push_back(GS_CMD_ZERO);
@@ -2001,7 +2001,7 @@ bool GSLidarDriver::isOtaRespOk(
     d.push_back(offset >> 8);
     d.push_back(cmd);
     d.push_back(GS_CMD_ACKOK);
-    //计算8位校验和
+    // Calculate 8-bit checksum
     uint8_t cs = 0;
     for (int k=4; k<d.size(); ++k)
         cs += uint8_t(d.at(k));
@@ -2033,7 +2033,7 @@ bool GSLidarDriver::sendData(
 
     bool ret = false;
     std::vector<uint8_t> ds;
-    //计算8位校验和
+    // Calculate 8-bit checksum
     uint8_t cs = 0;
     for (int k=4; k<d.size(); ++k)
         cs += uint8_t(d.at(k));

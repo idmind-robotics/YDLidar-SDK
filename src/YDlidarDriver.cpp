@@ -1841,10 +1841,10 @@ namespace ydlidar
   }
 
   /**
-   * @brief 设置雷达异常自动重新连接 \n
-   * @param[in] enable    是否开启自动重连:
-   *     true	开启
-   *	  false 关闭
+   * @brief Configure automatic reconnection in case of radar malfunction. \n
+   * @param[in] enable    Whether to enable automatic reconnection:
+   *     true	Enable
+   *	  false Disable
    */
   void YDlidarDriver::setAutoReconnect(const bool &enable)
   {
@@ -1923,14 +1923,14 @@ namespace ydlidar
     delay(30);
     {
       ScopedLocker l(_cmd_lock);
-      // 不管单双通雷达都发送启动命令
+      // Regardless of whether it's a single-channel or dual-channel radar, both send an activation command.
       ret = sendCommand(force ? LIDAR_CMD_FORCE_SCAN : LIDAR_CMD_SCAN);
       if (!IS_OK(ret))
         return ret;
 
-      if (!m_SingleChannel) //双通雷达
+      if (!m_SingleChannel) // Dual-channel radar
       {
-        //双通雷达需要等待响应
+        // Dual-channel radar needs to wait for a response
         lidar_ans_header response_header;
         if ((ret = waitResponseHeader(&response_header, timeout)) != RESULT_OK)
         {
@@ -1945,23 +1945,23 @@ namespace ydlidar
           return RESULT_FAIL;
         }
 
-        //此处仅获取模组设备信息
+        // This section only retrieves module device information.
         {
           waitDevicePackage(1000);
         }
       }
 
-      //非Tmini系列雷达才自动获取强度标识
+      // Only non-Tmini series radars automatically acquire Intensity indicators.
       if (m_AutoIntensity)
       {
         if (!isTminiLidar(model))
         {
-          // 获取强度标识
+          // Get Intensity Identifier
           getIntensityFlag();
         }
       }
 
-      // 创建数据解析线程
+      // Create data parsing thread
       ret = createThread();
     }
 
@@ -1992,7 +1992,7 @@ namespace ydlidar
 
   result_t YDlidarDriver::createThread()
   {
-    // //如果线程已启动，则先退出线程
+    // // If the thread has already started, exit the thread first.
     // if (_thread.getHandle())
     // {
     //   m_isScanning = false;
@@ -2727,7 +2727,7 @@ namespace ydlidar
           break;
 
         case 2:
-          package_type = c & 0x01; // 是否是零位包标识
+          package_type = c & 0x01; // Is it a zero-position packet identifier?
           zero = (package_type == CT_RingStart);
           break;
 
@@ -2782,11 +2782,11 @@ namespace ydlidar
     return ans;
   }
 
-#define ZERO_OFFSET12 12 // 零位包数据长度12（不带光强）
-#define ZERO_OFFSET13 13 // 零位包数据长度13（带光强）
+#define ZERO_OFFSET12 12 // Zero-position packet data length 12 (without intensity)
+#define ZERO_OFFSET13 13 // Zero-position packet data length 13 (with intensity)
   result_t YDlidarDriver::getIntensityFlag()
   {
-    // 只针对三角雷达
+    // Only for triangular radars
     if (!isTriangleLidar(m_LidarType))
       return RESULT_OK;
 
@@ -2795,15 +2795,15 @@ namespace ydlidar
 
     m_dataPos = 0;
     uint32_t lastOffset = 0;
-    // 遍历5圈，如果5圈结果一致则认为准确
+    // Traverse 5 rounds, if the results of 5 rounds are consistent, consider it accurate
     int i = 5;
     while (i-- > 0)
     {
-      uint8_t zero = 0;     // 零位包标记
-      uint32_t headPos = 0; // 包头位置
-      uint32_t offset = 0;  // 当前圈零位包长度
-      uint8_t lastZero = 0; // 上一包是否是零位包标记
-      uint32_t lastPos = 0; // 上一包包头位置
+      uint8_t zero = 0;     // Zero-position packet marker
+      uint32_t headPos = 0; // Packet header position
+      uint32_t offset = 0;  // Current round zero-position packet length
+      uint8_t lastZero = 0; // Whether the previous packet is a zero-position packet marker
+      uint32_t lastPos = 0; // Previous packet header position
       while (IS_OK(parseHeader(zero, headPos, 500)))
       {
         // printf("zero %u pos %u\n", zero, headPos);

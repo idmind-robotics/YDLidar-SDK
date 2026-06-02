@@ -15,54 +15,54 @@
 #endif
 
 #define SDK_DTS_POINT_COUNT 1
-#define SDK_CMD_HEADFLAG 0xA5 //协议头标识1
-#define SDK_CMD_STARTSCAN 0x01 //开启测距
-#define SDK_CMD_STOPSCAN 0x02 //停止测距
-#define SDK_CMD_CALIBPARAM 0x06 //获取校准参数
-#define SDK_DTS_DEVNUM 0x03 //设备号
-#define SDK_DTS_DEVTYPE 0x20 //设备类型
-#define SDK_DTS_RESERVED 0x00 //保留位
+#define SDK_CMD_HEADFLAG 0xA5 // Protocol header identifier 1
+#define SDK_CMD_STARTSCAN 0x01 // Enable distance measurement
+#define SDK_CMD_STOPSCAN 0x02 // Stop distance measurement
+#define SDK_CMD_CALIBPARAM 0x06 // Get calibration parameters
+#define SDK_DTS_DEVNUM 0x03 // Device number
+#define SDK_DTS_DEVTYPE 0x20 // Device type
+#define SDK_DTS_RESERVED 0x00 // Reserved bits
 #define SDK_DTS_BUFFLEN 100
 
-//设置1字节对齐
+// Set 1-byte alignment
 #pragma pack(1)
 
-//DTS雷达协议头
+// DTS Radar Protocol Header
 struct SdkDTSHead
 {
-    uint8_t head = 0; //包头
-    uint8_t devNum = 0; //设备号
-    uint8_t devType = 0; //设备类型
-    uint8_t cmd = 0; //命令功能码
-    uint8_t reserved = 0; //保留位
-    uint16_t size = 0; //数据大小
+    uint8_t head = 0; // Package header
+    uint8_t devNum = 0; // Device number
+    uint8_t devType = 0; // Device type
+    uint8_t cmd = 0; // Command function code
+    uint8_t reserved = 0; // Reserved bits
+    uint16_t size = 0; // Data size
 };
 #define SDKDTSHEADSIZE sizeof(SdkDTSHead)
-//DTS雷达单点数据
+// DTS Radar Single Point Data
 struct SdkDTSPc
 {
 
-    uint16_t subPeakQuality = 0; //次峰质性
-    uint16_t tempCode = 0; //温度码
-    uint16_t subPeakIntensity = 0; //次峰强度
-    uint16_t mainPeakQuality = 0; //主峰质性
-    uint16_t mainPeakCalib = 0; //主峰校正
-    uint16_t mainPeakIntensity = 0; //主峰强度
-    uint16_t sunlitBase = 0; //阳光基底
+    uint16_t subPeakQuality = 0; //Sub-peak quality
+    uint16_t tempCode = 0; //Temperature code
+    uint16_t subPeakIntensity = 0; //Sub-peak intensity
+    uint16_t mainPeakQuality = 0; //Main peak quality
+    uint16_t mainPeakCalib = 0; //Main peak calibration
+    uint16_t mainPeakIntensity = 0; //Main peak intensity
+    uint16_t sunlitBase = 0; //Sunlit base
 };
-//DTS雷达一包点云数据
+// DTS Radar One Package Point Cloud Data
 struct SdkDTSPcs
 {
     SdkDTSHead head;
-    SdkDTSPc point; //一包数据只有单点
-    uint16_t cs = 0;//校验码
+    SdkDTSPc point; // One package data only has a single point
+    uint16_t cs = 0;// Checksum
 };
 
 #define SDKDTSPCSSIZE sizeof(SdkDTSPcs)
-//取消设置1字节对齐
+// Cancel 1-byte alignment
 #pragma pack()
 
-//校准参数结构体
+// Calibration parameter structure
 struct CalibParamInfo
 {
     float k = 0.0;
@@ -78,7 +78,7 @@ using namespace core;
 using namespace core::serial;
 using namespace core::base;
 
-/*********************DTS雷达 ****************/
+/*********************DTS radar ****************/
 class DTSLidarDriver : public DriverInterface
 {
 public:
@@ -90,27 +90,27 @@ public:
     result_t stopScan(uint32_t timeout = DEFAULT_TIMEOUT / 2);
     result_t stop();
     /*
-     * @brief 获取激光数据
-     * @param nodebuffer out: 激光点信息
-     * @param count      in: 一圈激光点数
-     * @param timeout    in: 超时时间
+     * @brief Acquiring laser data
+     * @param nodebuffer out: Laser dot information
+     * @param count      in: Number of laser dots in a circle
+     * @param timeout    in: Timeout
      * @return
      */
     result_t grabScanData(node_info *nodebuffer, size_t &count,
                           uint32_t timeout = DEFAULT_TIMEOUT);
 
     /*
-     * @brief 等待扫描数据
-     * @param nodes   out:存储节点信息的数组
-     * @param count   out:节点信息数组的大小，传入时表示期望接收的节点数量，返回时表示实际接收的节点数量
-     * @param timeout in:超时时间（毫秒）
-     * @return result_t 操作结果，成功返回RESULT_OK，失败返回RESULT_FAIL
+     * @brief Waiting for scan data
+     * @param nodes   out: Array to store node information
+     * @param count   out: Size of the node information array, input represents the expected number of nodes to receive, output represents the actual number of nodes received
+     * @param timeout in: Timeout (milliseconds)
+     * @return result_t Operation result, success returns RESULT_OK, failure returns RESULT_FAIL
      */
     result_t waitScanData(node_info *nodes,
                           size_t &count,
                           uint32_t timeout = DEFAULT_TIMEOUT);
 
-    //激光数据解析线程
+    // Laser data parsing thread
     int cacheScanData();
 
     result_t createThread();
@@ -120,89 +120,89 @@ public:
     virtual std::string getSDKVersion();
 
     virtual const char *DescribeError(bool isTCP = false);
-    //雷达是否处于扫图状态
+    // Laser data parsing thread
     bool isscanning() const;
-    //雷达是否处于连接状态
+    // Laser data parsing thread
     bool isconnected() const;
 
     /*
-     * @brief 是否设置雷达异常自动重新连接
-     * @param enable in:是否开启自动重连
+     * @brief Should I configure automatic reconnection in case of radar malfunction?
+     * @param enable in:whether to enable automatic reconnection
      */
     void setAutoReconnect(const bool &enable);
 
     /*
-     * @brief 解包激光数据 \n
-     * @param[in] node 解包后激光点信息
-     * @param[in] timeout     超时时间
+     * @brief Acquiring laser data \n
+     * @param[in] node Acquired laser point information
+     * @param[in] timeout     Timeout
      */
     result_t waitPackage(node_info *node, uint32_t timeout = DEFAULT_TIMEOUT);
 
     result_t sendCmd(uint8_t cmd,
                      const uint8_t *data = NULL,
                      size_t size = 0);
-    //串口发送数据
+    // Serial port sending data
     result_t sendData(const uint8_t *data, size_t size);
 
-    //等待响应
+    // Waiting for a response
     result_t waitResp(uint8_t cmd,
                      uint32_t timeout = DEFAULT_TIMEOUT);
 
     /*
-     * @brief 等待数据(只获取响应data区的数据)
-     * @param cmd      in:命令字
-     * @param data     out:接收到的数据
-     * @param timeout  in：超时时间
+     * @brief Waiting for data(Retrieve only the data from the response data area)
+     * @param cmd      in: command word
+     * @param data     out: Received data
+     * @param timeout  in：Timeout
      * @return
      */
     result_t waitResp(uint8_t cmd,
                      std::vector<uint8_t> &data,
                      uint32_t timeout = DEFAULT_TIMEOUT);
     /*
-     * 计算收到的数据的大小
-     * @param srcSize  in:期望接收的数据大小
-     * @param timeout  in:超时时间
-     * @param dstSize  out:实际接收到的数据大小
-     * @return 返回结果，表示等待数据的状态
+     * Calculate the size of the received data
+     * @param srcSize  in:Expected size of the data to receive
+     * @param timeout  in:Timeout
+     * @param dstSize  out:Actual size of the received data
+     * @return Returns the result, indicating the status of waiting for data
      */
     result_t waitForData(size_t srcSize, uint32_t timeout = DEFAULT_TIMEOUT,
                          size_t *dstSize = NULL);
     /*
-     * @brief 从串口中读取指定大小的数据
-     * @param data   out:存储从串口读取的数据
-     * @param size   in:指定需要读取的数据大小
+     * @brief Reading data from the serial port
+     * @param data   out: Data read from the serial port
+     * @param size   in: Specified size of data to read
      * @return
      */
     result_t getData(uint8_t *data, size_t size);
 
-    //设置扫描频率(无)
+    // Received data(none)
     result_t setScanFreq(float sf, uint32_t timeout);
-    //获取校准参数
+    // Obtain calibration parameters
     result_t getCalibParam(uint32_t timeout);
-    //自动连接
+    // Automatic connection
     result_t checkAutoConnecting();
-    //重新连接开启扫描
+    // Reconnect and start scanning
     result_t startAutoScan(bool force = false,
                            uint32_t timeout = DEFAULT_TIMEOUT);
-    //获取设备信息
+    // Obtain device information
     virtual result_t getDeviceInfo(device_info &info,
                                    uint32_t timeout = DEFAULT_TIMEOUT);
-    //获取健康状态
+    // Get health status
     virtual result_t getHealth(device_health &health,
                                uint32_t timeout = DEFAULT_TIMEOUT);
-    //错误信息
+    // error message
     virtual const char *getErrorDesc(bool isTCP = false);
-    //关闭数据获取通道
+    // Close data acquisition channel
     void disableDataGrabbing();
     void flushSerial();
-    //CRC校验码(CRC-16/MODBUS)
+    // CRC checksum (CRC-16/MODBUS)
     uint16_t calculateCrc(const vector<uint8_t>& data);
 
 private:
-    serial::Serial *_serial = nullptr; //串口
-    std::vector<uint8_t> recvBuff; //一包数据缓存
-    float k = 0; //校准参数k
-    float b = 0; //校准参数b
+    serial::Serial *_serial = nullptr; // serial port
+    std::vector<uint8_t> recvBuff; // A data cache
+    float k = 0; // Calibration parameter k
+    float b = 0; // Calibration parameter b
 };
 }
 #endif // DTSLIDARDRIVER_H
