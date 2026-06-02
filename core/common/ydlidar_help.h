@@ -297,7 +297,7 @@ inline bool isOctaveLidar(int model)
   return ret;
 }
 
-//根据雷达码判断是否是Tmini系列雷达
+// Determine if it is a Tmini series radar based on the radar code.
 inline bool isTminiLidar(int model)
 {
   return (model == DriverInterface::YDLIDAR_Tmini ||
@@ -306,13 +306,13 @@ inline bool isTminiLidar(int model)
           model == DriverInterface::YDLIDAR_TSAPro);
 }
 
-//根据雷达码判断是否是SCL雷达
+// Determine if it is an SCL radar based on the radar code.
 inline bool isSCLLidar2(int model)
 {
   return model == DriverInterface::YDLIDAR_SCL;
 }
 
-//根据雷达码判断是否是TEA雷达
+// Determine if it is a TEA radar based on the radar code.
 inline bool isTEALidar(int model)
 {
   return model == DriverInterface::YDLIDAR_TEA;
@@ -786,7 +786,7 @@ inline int ConvertLidarToUserSmaple(int model, int rate)
       _samp_rate = 10;
       break;
     default:
-      //修改默认为当前获取到采样率值
+      // Modify the default value to the currently acquired sampling rate.
       _samp_rate = rate;
       break;
     }
@@ -811,7 +811,7 @@ inline int ConvertLidarToUserSmaple(int model, int rate)
       _samp_rate = 10;
       break;
     default:
-      //修改默认为当前获取到采样率值
+      // Modify the default value to the currently acquired sampling rate.
       _samp_rate = rate;
       break;
     }
@@ -886,7 +886,7 @@ inline void parsePackageNode(const node_info &node, LaserDebug &info)
       info.debug2 = node.debugInfo;
       break;
     case 3:
-      //健康信息
+      // Health Information
       info.health = node.debugInfo;
       break;
     case 4:
@@ -970,7 +970,7 @@ inline bool parseLaserDebugInfo(const LaserDebug &debug, device_info &di)
     ss << std::setw(2) << std::setfill('0') << int(Date);
     ss << std::setw(8) << std::setfill('0') << Number;
     std::string sn(ss.str());
-    // 此处sprintf函数在Python调用中会导致缓存溢出
+    // The sprintf function call in Python here will cause a buffer overflow.
     //  sprintf(reinterpret_cast<char*>(di.serialnum),
     //    "%04u%02u%02u%08u", Year + 2020, Moth, Date, Number);
     for (int i = 0; i < SDK_SNLEN && i < sn.size(); i++)
@@ -1044,7 +1044,7 @@ inline bool isV1Protocol(uint8_t protocol) {
   return false;
 }
 
-//以16进制打印数据
+// Print data in hexadecimal
 inline void printHex(const uint8_t *data, int size)
 {
     if (!data || !size)
@@ -1054,7 +1054,7 @@ inline void printHex(const uint8_t *data, int size)
     printf("\n");
 }
 
-//打印系统时间
+// Print system time
 #define UNIX_PRINT_TIME  \
   time_t currentTime = time(NULL); \
   struct tm *localTime = localtime(&currentTime); \
@@ -1065,7 +1065,7 @@ inline void printHex(const uint8_t *data, int size)
     localTime->tm_hour, \
     localTime->tm_min, \
     localTime->tm_sec);
-//格式化字符串
+// Format string
 #define FORMAT_STDOUT \
   char buff[1024] = {0}; \
   va_list ap; \
@@ -1075,7 +1075,7 @@ inline void printHex(const uint8_t *data, int size)
   printf(buff); \
   printf("\n");
 
-//调试
+// debug
 inline void debug(char* fmt, ...)
 {
 #ifdef _WIN32
@@ -1087,7 +1087,7 @@ inline void debug(char* fmt, ...)
   fflush(stdout);
 }
 
-//常规
+// conventional
 inline void info(char* fmt, ...)
 {
 #ifdef _WIN32
@@ -1099,7 +1099,7 @@ inline void info(char* fmt, ...)
   fflush(stdout);
 }
 
-//警告
+// warning
 inline void warn(char* fmt, ...)
 {
 #ifdef _WIN32
@@ -1111,7 +1111,7 @@ inline void warn(char* fmt, ...)
   fflush(stdout);
 }
 
-//错误
+// error
 inline void error(char* fmt, ...)
 {
 #ifdef _WIN32

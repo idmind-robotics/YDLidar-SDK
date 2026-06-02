@@ -21,11 +21,11 @@ namespace ydlidar
       class DriverInterface
       {
       public:
-        // 是否单通
+        // Is it a one-way channel?
         PropertyBuilderByName(bool, SingleChannel, protected);
-        // 雷达类型
+        // Radar type
         PropertyBuilderByName(int, LidarType, protected);
-        // 设备类型（串口或网络）
+        // Device type (serial or network)
         PropertyBuilderByName(uint8_t, DeviceType, protected);
         /**
          * @brief Set and Get Sampling interval.
@@ -35,27 +35,27 @@ namespace ydlidar
          * @see DriverInterface::setPointTime and DriverInterface::getPointTime
          */
         PropertyBuilderByName(uint32_t, PointTime, protected);
-        // 是否支持DTR启动
+        // Does it support DTR boot?
         PropertyBuilderByName(bool, SupportMotorDtrCtrl, protected);
-        // 是否支持心跳
+        // Does it support heartbeat?
         PropertyBuilderByName(bool, HeartBeat, protected);
-        // 是否开启调试
+        // Is debugging enabled?
         PropertyBuilderByName(bool, Debug, protected);
-        // 扫描频率
+        // Scan frequency
         PropertyBuilderByName(float, ScanFreq, protected);
-        // 是否底板优先
+        // Is bottom plate priority?
         PropertyBuilderByName(bool, Bottom, protected);
-        // 是否已获取到设备信息
+        // Is device information obtained?
         PropertyBuilderByName(int, HasDeviceInfo, protected);
-        //底板设备信息
+        // Bottom plate device information
         PropertyBuilderByName(device_info, BaseDevInfo, protected);
-        //模组设备信息
+        // Module device information
         PropertyBuilderByName(device_info, ModuleDevInfo, protected);
-        //OTA文件
+        // OTA file
         PropertyBuilderByName(std::string, OtaName, protected);
-        //OTA文件加密
+        // OTA file encryption
         PropertyBuilderByName(bool, OtaEncode, protected);
-        //是否启用自动强度判断
+        // Whether to enable automatic intensity judgment
         PropertyBuilderByName(bool, AutoIntensity, protected);
 
         /**
@@ -254,7 +254,7 @@ namespace ydlidar
             device_info &di,
             uint32_t timeout = DEFAULT_TIMEOUT) = 0;
 
-        // 获取级联雷达设备信息
+        // Acquire information about cascaded radar equipment
         virtual result_t getDeviceInfo(
             std::vector<device_info_ex> &dis,
             uint32_t timeout = DEFAULT_TIMEOUT / 2)
@@ -270,7 +270,7 @@ namespace ydlidar
           return ret;
         }
 
-        // 获取设备信息
+        // Obtain device information
         virtual bool getDeviceInfoEx(device_info &di, int type=EPT_Module)
         {
           UNUSED(di);
@@ -467,24 +467,24 @@ namespace ydlidar
         }
 
         /**
-         * @brief 设置雷达工作模式（目前只针对GS2雷达）
-         * @param[in] mode 雷达工作模式
-         * @param[in] addr 雷达地址
-         * @return 成功返回RESULT_OK，否则返回非RESULT_OK
+         * @brief Configure radar operating mode (currently only for GS2 radar).
+         * @param[in] mode Radar operating modes
+         * @param[in] addr Radar address
+         * @return Success returns RESULT_OK, otherwise returns non-RESULT_OK
          */
         virtual result_t setWorkMode(int mode = 0, uint8_t addr = 0x00) { 
           return RESULT_FAIL; 
         }
 
         /**
-         * @brief 解析点云数据并判断带不带强度信息（目前只针对三角雷达）
-         * @return 成功返回RESULT_OK，否则返回非RESULT_OK
+         * @brief Analyze point cloud data and determine whether it contains intensity information (currently only for triangular radar).
+         * @return Returns RESULT_OK on success, otherwise returns a non-RESULT_OK.
          */
         virtual result_t getIntensityFlag() { 
           return RESULT_OK; 
         }
 
-        // 开始OTA升级
+        // Start OTA upgrade
         virtual bool ota() {
           return false;
         }
@@ -515,19 +515,19 @@ namespace ydlidar
           YDLIDAR_G1 = 19,            /**< G1 LiDAR Model. */
           YDLIDAR_G5 = 20,            /**< G5 LiDAR Model. */
           YDLIDAR_G7 = 21,            /**< G7 LiDAR Model. */
-          YDLIDAR_SCL = 22,           // SCL雷达
-          YDLIDAR_R3 = 23, //R3雷达
+          YDLIDAR_SCL = 22,           // SCL radar
+          YDLIDAR_R3 = 23, //R3 radar
 
-          YDLIDAR_GS2 = 51, // GS2雷达
-          YDLIDAR_GS1 = 52, // GS1雷达
-          YDLIDAR_GS5 = 53, // GS5雷达
-          YDLIDAR_GS6 = 54, // GS6雷达
+          YDLIDAR_GS2 = 51, // GS2 radar
+          YDLIDAR_GS1 = 52, // GS1 radar
+          YDLIDAR_GS5 = 53, // GS5 radar
+          YDLIDAR_GS6 = 54, // GS6 radar
 
           YDLIDAR_TG15 = 100, /**< TG15 LiDAR Model. */
           YDLIDAR_TG30 = 101, /**< T30 LiDAR Model. */
           YDLIDAR_TG50 = 102, /**< TG50 LiDAR Model. */
 
-          YDLIDAR_TEA = 110, //TEA雷达
+          YDLIDAR_TEA = 110, //TEA radar
 
           YDLIDAR_TSA = 130, /**< TSA LiDAR Model. */
           YDLIDAR_TSAPro = 131, /**< TSA Pro LiDAR Model. */
@@ -535,8 +535,8 @@ namespace ydlidar
           YDLIDAR_TminiPro = 150, /**< Tmini Pro LiDAR Model. */
           YDLIDAR_TminiPlus = 151, /**< Tmini Plus LiDAR Model. */
 
-          YDLIDAR_SDM15 = 160, //SDM15单点雷达
-          YDLIDAR_SDM18, //DTS单点雷达
+          YDLIDAR_SDM15 = 160, //SDM15 single-point radar
+          YDLIDAR_SDM18, //DTS single-point radar
 
           YDLIDAR_T15 = 200, /**< T15 LiDAR Model. */
 
@@ -568,14 +568,14 @@ namespace ydlidar
         bool m_isConnected = false;
         /// Scan Data Event
         Event _dataEvent;
-        /// Data Locker（不支持嵌套）
+        /// Data Locker (Does not support nesting)
         Locker _lock;
         /// Parse Data thread
-        Thread _thread; //线程对象
-        std::thread* m_thread = nullptr; //STD线程对象
-        /// command locker（不支持嵌套）
+        Thread _thread; // thread object
+        std::thread* m_thread = nullptr; // STD thread object
+        /// Command locker (does not support nesting)
         Locker _cmd_lock;
-        /// driver error locker（不支持嵌套）
+        /// Driver error locker (nesting is not supported)
         Locker _error_lock;
 
         /// LiDAR com port or IP Address

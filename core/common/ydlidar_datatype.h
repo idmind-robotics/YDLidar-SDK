@@ -52,7 +52,7 @@ typedef struct  {
   uint8_t     numH;
   uint8_t     numL;
   uint8_t     health;
-  uint8_t     model; //雷达型号
+  uint8_t     model; // Radar model
   uint8_t     maxIndex;
 } LaserDebug;
 
@@ -107,15 +107,15 @@ typedef struct  {
 typedef struct {
   // System time when first range was measured in nanoseconds
   uint64_t stamp = 0;
-  //转速
+  // Rotation speed
   float scanFreq = .0;
-  //采样率
+  // Sampling rate
   float sampleRate = .0;
   // Array of lidar points
   std::vector<LaserPoint> points;
-  int size = 0; //实际点数（固定分辨率时点数与实际点数不符）
+  int size = 0; // Actual point count (point count does not match actual point count when fixed resolution)
   // Configuration of scan
   LaserConfig config;
   int moduleNum = 0;
-  uint16_t envFlag = 0; //环境标记（目前只针对GS2）
+  uint16_t envFlag = 0; // Environment flag (currently only for GS2)
 } LaserScan;
