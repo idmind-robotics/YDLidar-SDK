@@ -126,7 +126,7 @@ class YDLIDAR_API CYdLidar {
   /**
    * @brief Uninitialize the SDK and Disconnect the LiDAR.
    */
-  void disconnecting();
+  bool disconnecting();
 
   /**
    * @brief Get the last error information of a (socket or serial)

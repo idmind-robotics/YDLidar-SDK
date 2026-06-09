@@ -161,7 +161,7 @@ namespace ydlidar
     //如果是双通雷达，需要先停止
     if (!m_SingleChannel)
     {
-      printf("[YDLIDAR] Stop Lidar\n");
+      printf("[YDLIDAR-SDK] Stop Lidar\n");
       stop();
     }
 
@@ -640,7 +640,7 @@ namespace ydlidar
         {
           if (!isAutoReconnect)
           {
-            fprintf(stderr, "[YDLIDAR] Exit scanning thread\n");
+            fprintf(stderr, "[YDLIDAR-SDK] Exit scanning thread\n");
             fflush(stderr);
             {
               m_isScanning = false;
@@ -676,7 +676,7 @@ namespace ydlidar
           if (m_driverErrno == NoError)
             setDriverError(TimeoutError);
 
-          fprintf(stderr, "[YDLIDAR] Timeout count: %d\n", timeout_count);
+          fprintf(stderr, "[YDLIDAR-SDK] Timeout count: %d\n", timeout_count);
           fflush(stderr);
         }
       }
@@ -698,7 +698,7 @@ namespace ydlidar
       {
         if (local_buf[pos].sync & LIDAR_RESP_SYNCBIT)
         {
-          // printf("[YDLIDAR] S2 points Stored in buffer start %lu\n", scan_count);
+          // printf("[YDLIDAR-SDK] S2 points Stored in buffer start %lu\n", scan_count);
           if (local_scan[0].sync & LIDAR_RESP_SYNCBIT)
           {
             ScopedLocker l(_lock);
@@ -708,7 +708,7 @@ namespace ydlidar
             memcpy(scan_node_buf, local_scan, scan_count * sizeof(node_info));
             scan_node_count = scan_count;
             _dataEvent.set();
-            // printf("[YDLIDAR] S2 points Stored in buffer end %lu\n", scan_count);
+            // printf("[YDLIDAR-SDK] S2 points Stored in buffer end %lu\n", scan_count);
           }
 
           scan_count = 0;
@@ -885,7 +885,7 @@ namespace ydlidar
             }
             if (csc != csr)
             {
-              printf("[YDLIDAR] Checksum error c[0x%02X] != r[0x%02X]\n", csc, csr);
+              printf("[YDLIDAR-SDK] Checksum error c[0x%02X] != r[0x%02X]\n", csc, csr);
               fflush(stdout);
             }
             else
@@ -1220,7 +1220,7 @@ namespace ydlidar
       ct = packages.ct;
       nowPackageNum = packages.count;
     }
-    // printf("[YDLIDAR] S2 pack points %u\n", nowPackageNum);
+    // printf("[YDLIDAR-SDK] S2 pack points %u\n", nowPackageNum);
   }
 
   void YDlidarDriver::parseNodeDebugFromBuffer(node_info *node)
@@ -1515,7 +1515,7 @@ namespace ydlidar
     //       if (currCount >= count)
     //       {
     //         hasZero = true;
-    //         printf("[YDLIDAR] Current points count %d > buffer size %d\n",
+    //         printf("[YDLIDAR-SDK] Current points count %d > buffer size %d\n",
     //           currCount, count);
     //         fflush(stdout);
     //         break;
@@ -2003,18 +2003,18 @@ namespace ydlidar
     //   return RESULT_FAIL;
     // }
 
-    // printf("[YDLIDAR] Create thread 0x%X\n", _thread.getHandle());
+    // printf("[YDLIDAR-SDK] Create thread 0x%X\n", _thread.getHandle());
     // fflush(stdout);
     // return RESULT_OK;
     m_thread = new std::thread(&YDlidarDriver::cacheScanData, this);
     if (!m_thread)
     {
-      printf("[YDLIDAR] Fail to create thread\n");
+      printf("[YDLIDAR-SDK] Fail to create thread\n");
       fflush(stdout);
       return RESULT_FAIL;
     }
 
-    printf("[YDLIDAR] Create thread 0x%X\n", m_thread->get_id());
+    printf("[YDLIDAR-SDK] Create thread 0x%X\n", m_thread->get_id());
     fflush(stdout);
     return RESULT_OK;
   }
@@ -2790,7 +2790,7 @@ namespace ydlidar
     if (!isTriangleLidar(m_LidarType))
       return RESULT_OK;
 
-    printf("[YDLIDAR] Start to getting intensity flag\n");
+    printf("[YDLIDAR-SDK] Start to getting intensity flag\n");
     fflush(stdout);
 
     m_dataPos = 0;
@@ -2829,7 +2829,7 @@ namespace ydlidar
             if (lastOffset &&
                 lastOffset != offset)
             {
-              printf("[YDLIDAR] Fail to getting intensity\n");
+              printf("[YDLIDAR-SDK] Fail to getting intensity\n");
               return RESULT_FAIL;
             }
 
@@ -2853,10 +2853,10 @@ namespace ydlidar
         setIntensities(true);
         m_intensityBit = 8;
       }
-      printf("[YDLIDAR] Auto set intensity %d\n", m_intensities);
+      printf("[YDLIDAR-SDK] Auto set intensity %d\n", m_intensities);
     }
 
-    printf("[YDLIDAR] End to getting intensity flag\n");
+    printf("[YDLIDAR-SDK] End to getting intensity flag\n");
     fflush(stdout);
 
     return RESULT_OK;
