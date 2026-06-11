@@ -607,7 +607,8 @@ int GSLidarDriver::cacheScanData()
                 if (m_driverErrno != BlockError)
                     setDriverError(TimeoutError);
             }
-            fprintf(stderr, "[GSLIDAR] Timeout count: %d\n", timeout_count);
+            // fprintf(stderr, "[GSLIDAR] Timeout count: %d\n", timeout_count);
+            fprintf(stderr, "[YDLIDAR-SDK] Scan failed # %d (driver error: %d (Timeout), scanning: %s)\n", timeout_count, m_driverErrno, m_isScanning ? "true" : "false");
             fflush(stderr);
             // Reconnect lidar
             if (!isAutoReconnect)

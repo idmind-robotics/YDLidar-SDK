@@ -253,8 +253,32 @@ namespace ydlidar
     // _thread.join();
     if (m_thread)
     {
+      // waitPackage() blocks on a serial read and cannot be interrupted by
+      // m_isScanning=false or _dataEvent.set(). A plain join() here will hang
+      // until the serial timeout expires, causing the OS to detect a self-join
+      // deadlock (EDEADLK) and throw system_error.
+      // Instead, wait up to DEFAULT_TIMEOUT+500ms for the thread to exit
+      // naturally, then detach if it doesn't.
       if (m_thread->joinable())
-        m_thread->join();
+      {
+        auto deadline = std::chrono::steady_clock::now() +
+                        std::chrono::milliseconds(DEFAULT_TIMEOUT + 500);
+        while (m_thread->joinable() &&
+               std::chrono::steady_clock::now() < deadline)
+        {
+          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+
+        if (m_thread->joinable())
+        {
+          fprintf(stderr, "[YDLIDAR-SDK] disableDataGrabbing: thread did not exit within timeout, detaching\n");
+          m_thread->detach();
+        }
+        else
+        {
+          m_thread->join();
+        }
+      }
       delete m_thread;
       m_thread = nullptr;
     }
@@ -676,7 +700,8 @@ namespace ydlidar
           if (m_driverErrno == NoError)
             setDriverError(TimeoutError);
 
-          fprintf(stderr, "[YDLIDAR-SDK] Timeout count: %d\n", timeout_count);
+          // fprintf(stderr, "[YDLIDAR-SDK] Timeout count: %d\n", timeout_count);
+          fprintf(stderr, "[YDLIDAR-SDK] Scan failed # %d (driver error: %d (Timeout), scanning: %s)\n", timeout_count, m_driverErrno, m_isScanning ? "true" : "false");
           fflush(stderr);
         }
       }

@@ -1363,8 +1363,10 @@ bool CYdLidar::getDeviceHealth()
 
   if (IS_OK(op_result))
   {
-    printf("[YDLIDAR-SDK] Lidar running correctly! The health status: %s\n",
+    printf("[YDLIDAR-SDK] Lidar running %s! The health status: %s\n",
+            (healthinfo.status & 0x01) ? "abnormally" : "normally",
            (int)healthinfo.status == 0 ? "good" : "bad");
+    fflush(stdout);
 
     if (healthinfo.status == 2)
     {

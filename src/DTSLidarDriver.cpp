@@ -268,7 +268,8 @@ int DTSLidarDriver::cacheScanData()
             else
             {
                 timeout_count ++;
-                fprintf(stderr, "[YDLIDAR] Timeout count %d\n", timeout_count);
+                // fprintf(stderr, "[YDLIDAR] Timeout count %d\n", timeout_count);
+                fprintf(stderr, "[YDLIDAR-SDK] Scan failed # %d (driver error: %d (Timeout), scanning: %s)\n", timeout_count, m_driverErrno, m_isScanning ? "true" : "false");
                 fflush(stderr);
             }
         }
