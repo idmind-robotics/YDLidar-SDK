@@ -250,7 +250,7 @@ namespace ydlidar
   {
     m_isScanning = false;
     _dataEvent.set();
-    // _thread.join();
+
     if (m_thread)
     {
       // waitPackage() blocks on a serial read and cannot be interrupted by
