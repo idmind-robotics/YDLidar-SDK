@@ -1364,7 +1364,7 @@ bool CYdLidar::getDeviceHealth()
   if (IS_OK(op_result))
   {
     printf("[YDLIDAR-SDK] Lidar running %s! The health status: %s\n",
-            (healthinfo.status & 0x01) ? "abnormally" : "normally",
+            (healthinfo.status != 0) ? "abnormally" : "normally",
            (int)healthinfo.status == 0 ? "good" : "bad");
     fflush(stdout);
 
@@ -1373,6 +1373,7 @@ bool CYdLidar::getDeviceHealth()
       fprintf(stderr,
               "[YDLIDAR-SDK] Error, YDLidar internal error[0x%X] detected. "
               "Please reboot the device to retry.\n", healthinfo.error_code);
+      fflush(stdout);
       return false;
     }
     else
@@ -1383,6 +1384,7 @@ bool CYdLidar::getDeviceHealth()
   else
   {
     fprintf(stderr, "[YDLIDAR-SDK] Error, cannot retrieve YDLidar health code: %x\n", op_result);
+    fflush(stdout);
     return false;
   }
 }
